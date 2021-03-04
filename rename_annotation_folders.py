@@ -1,13 +1,15 @@
 from argparse import ArgumentParser
 from pathlib import Path
 from tqdm import tqdm
+import glob
+import os
 
 parser = ArgumentParser()
 parser.add_argument("--infolder", type=Path)
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    for fold in tqdm(args.infolder.iterdir()):
+    for fold in tqdm(glob.glob(os.path.join(args.infolder, '*'))):
         print('Changing folder {fold}')
         for fn in fold.iterdir():
             if fn.is_dir():

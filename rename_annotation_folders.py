@@ -10,8 +10,8 @@ parser.add_argument("--infolder", type=Path)
 if __name__ == "__main__":
     args = parser.parse_args()
     for fold in tqdm(glob.glob(os.path.join(args.infolder, '*'))):
-        print('Changing folder {fold}')
-        for fn in fold.iterdir():
+        print(f'Changing folder {fold}')
+        for fn in Path(fold).iterdir():
             if fn.is_dir():
                 new_name = fn.name.replace(" - ", "_")
                 new_name = new_name.replace(" ", "")

@@ -6,6 +6,8 @@ import logging
 from pathaia.patches import HierarchicalPatchifier, filters
 from pathaia.patches.functional_api import *
 import warnings
+import os
+import glob
 
 
 class Error(Exception):
@@ -119,12 +121,20 @@ def main():
     filters = {k: [has_tissue] for k in range(top + 1)}
     silent = [k for k in range(top + 1)]
 
-    with warnings.catch_warnings(record=True) as ws:
-        warnings.simplefilter("always")
-        patchify_folder_hierarchically(inputdir, outdir, top, 0, psize, {
-                                       'x': psize, 'y': psize}, filters=filters, silent=silent, extensions=('.mrxs', ))
-    for w in ws:
-        logger.warning(w.message)
+    try:
+        os.mkdir(inputdir)
+        print("Directory", inputdir, "created")
+    except FileExistsError:
+        print("Directory", inputdir, "already exists")
+
+    for folder in glob.glob(os.path.join(inputdir, "*")):
+        exit_folder = os.path.join(outdir, os.path.basename(folder))
+        with warnings.catch_warnings(record=True) as ws:
+            warnings.simplefilter("always")
+            patchify_folder_hierarchically(folder, exit_folder, top, 0, psize, {
+                                           'x': psize, 'y': psize}, filters=filters, silent=silent, extensions=('.mrxs', ))
+        for w in ws:
+            logger.warning(w.message)
 
 
 if __name__ == "__main__":

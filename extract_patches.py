@@ -82,6 +82,7 @@ parser.add_argument("--outdir", type=str,
                     help="path to output patch files.")
 parser.add_argument("--extension", type=str,
                     help="extension of WSI")
+parser.add_argument("--verbose", type=int, default=2)
 
 args = parser.parse_args()
 
@@ -112,6 +113,7 @@ def main():
     psize = args.psize
     outdir = args.outdir
     ext = args.extension
+    verbose = args.verbose
 
     logger.info("Processing slide folder {}".format(inputdir))
     logger.info("Processing from level {} to level 0".format(top))
@@ -132,7 +134,7 @@ def main():
         with warnings.catch_warnings(record=True) as ws:
             warnings.simplefilter("always")
             patchify_folder_hierarchically(folder, exit_folder, top, 0, psize, {
-                                           'x': psize, 'y': psize}, filters=filters, silent=silent, extensions=('.mrxs', ))
+                                           'x': psize, 'y': psize}, filters=filters, silent=silent, extensions=(ext, ), verbose=verbose)
         for w in ws:
             logger.warning(w.message)
 

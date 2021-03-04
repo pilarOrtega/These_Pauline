@@ -121,7 +121,7 @@ def main():
     with warnings.catch_warnings(record=True) as ws:
         warnings.simplefilter("always")
         patchify_folder_hierarchically(inputdir, outdir, top, 0, psize, {
-                                       'x': psize, 'y': psize}, filters=filters, silent=silent, extensions=(ext))
+                                       'x': psize, 'y': psize}, filters=filters, silent=silent, extensions=('.mrxs', ))
     for w in ws:
         logger.warning(w.message)
 

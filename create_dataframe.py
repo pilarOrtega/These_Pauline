@@ -19,7 +19,7 @@ def main():
     df = pd.DataFrame(['Slide', 'Diagnostic', 'Annotation', 'level', 'x', 'y', 'dx', 'dy'])
     folder_list = glob.glob(os.path.join(input, '*'))
     cat_list = ['DHL_BCL2', 'DHL_BCL6', 'DLBCL_sans_rearrangement', 'THL']
-    folder_list = [f in folder_list if os.path.basename(folder) in cat_list]
+    folder_list = [f for f in folder_list if os.path.basename(f) in cat_list]
     for folder in folder_list:
         diagnostic = os.path.basename(folder)
         for subfold in glob.glob(os.path.join(folder, '*')):

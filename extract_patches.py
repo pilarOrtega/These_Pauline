@@ -122,10 +122,10 @@ def main():
     silent = [k for k in range(top + 1)]
 
     try:
-        os.mkdir(inputdir)
-        print("Directory", inputdir, "created")
+        os.mkdir(outdir)
+        print("Directory", outdir, "created")
     except FileExistsError:
-        print("Directory", inputdir, "already exists")
+        print("Directory", outdir, "already exists")
 
     for folder in glob.glob(os.path.join(inputdir, "*")):
         exit_folder = os.path.join(outdir, os.path.basename(folder))

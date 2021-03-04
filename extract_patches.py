@@ -100,7 +100,8 @@ logger.addHandler(f_handler)
 
 
 def has_tissue(img):
-    return filters.get_tissue(img, blacktol=0, whitetol=230, method="rgb").any()
+    mask = filters.get_tissue(img, blacktol=0, whitetol=230, method="rgb")
+    return (mask.sum() > 0.8 * mask.shape[0] * mask.shape[1])
 
 
 def main():

@@ -16,8 +16,12 @@ if __name__ == "__main__":
                 new_name = fn.name.replace(" - ", "_")
                 new_name = new_name.replace(" ", "")
                 prop_file = fn/"Slidedat.ini"
-                with prop_file.open("r") as f:
-                    lines = f.read().split("\n")
+                try:
+                    with prop_file.open("r") as f:
+                        lines = f.read().split("\n")
+                except FileNotFoundError:
+                    print('Not a slide folder')
+                    break
                 lines.insert(3, "OBJECTIVE_MAGNIFICATION = 20")
                 line = lines.pop(2)
                 line = line.replace(" - ", "_")
@@ -26,7 +30,7 @@ if __name__ == "__main__":
                     line = line.replace(f" {number}", f"{number}")
                     lines.insert(2, line)
                 except IndexError:
-                    print(f'Line already correct: {line}')
+                    break
                 with prop_file.open("w") as f:
                     f.write("\n".join(lines))
             else:

@@ -24,10 +24,14 @@ def main():
     for folder in tqdm(folder_list):
         print(f'Retrieving patches from {folder}')
         diagnostic = os.path.basename(folder)
-        for subfold in glob.glob(os.path.join(folder, '*')):
+        for subfold in tqdm(glob.glob(os.path.join(folder, '*'))):
             annotation = os.path.basename(subfold)
             slide = annotation.split('_')[2]
-            csv_file = os.path.join(subfold, 'patches.csv')
+            try:
+                csv_file = os.path.join(subfold, 'patches.csv')
+            except FileNotFoundError:
+                print(f'No patches for {annotation}')
+                continue
             patches = pd.read_csv(csv_file, sep=None, engine='python')
             for i, row in patches.iterrows():
                 df = df.append({'Slide': slide,

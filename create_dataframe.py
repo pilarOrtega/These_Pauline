@@ -29,10 +29,10 @@ def main():
             slide = annotation.split('_')[2]
             try:
                 csv_file = os.path.join(subfold, 'patches.csv')
+                patches = pd.read_csv(csv_file, sep=None, engine='python')
             except FileNotFoundError:
                 print(f'No patches for {annotation}')
                 continue
-            patches = pd.read_csv(csv_file, sep=None, engine='python')
             for i, row in patches.iterrows():
                 df = df.append({'Slide': slide,
                                 'Diagnostic': diagnostic,

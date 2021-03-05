@@ -2,6 +2,7 @@ import pandas as pd
 import glob
 import argparse
 import os
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 
@@ -16,11 +17,12 @@ args = parser.parse_args()
 def main():
     input = args.input
     outdir = args.outdir
-    df = pd.DataFrame(['Slide', 'Diagnostic', 'Annotation', 'level', 'x', 'y', 'dx', 'dy'])
+    df = pd.DataFrame([], columns=['Slide', 'Diagnostic', 'Annotation', 'level', 'x', 'y', 'dx', 'dy'])
     folder_list = glob.glob(os.path.join(input, '*'))
     cat_list = ['DHL_BCL2', 'DHL_BCL6', 'DLBCL_sans_rearrangement', 'THL']
     folder_list = [f for f in folder_list if os.path.basename(f) in cat_list]
-    for folder in folder_list:
+    for folder in tqdm(folder_list):
+        print(f'Retrieving patches from {folder}')
         diagnostic = os.path.basename(folder)
         for subfold in glob.glob(os.path.join(folder, '*')):
             annotation = os.path.basename(subfold)

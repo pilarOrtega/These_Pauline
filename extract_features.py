@@ -3,6 +3,7 @@ import pandas as pd
 import argparse
 from Pathaia_CNN_embedding import get_embeddings
 import pickle
+import tensorflow as tf
 
 
 def select_patches(patches, level, patch_size, slide_dir):
@@ -32,7 +33,19 @@ def main():
     parser.add_argument('--model', type=str, default='ResNet50')
     parser.add_argument('--layer', type=str, default='')
     parser.add_argument('--outdir', type=str, default='')
+    parser.add_argument('--device', default="0")
     args = parser.parse_args()
+
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.device
+
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+        except RuntimeError as e:
+            print(e)
 
     patches = args.patches
     slide_dir = args.slide_dir

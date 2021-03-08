@@ -41,7 +41,7 @@ def main():
                                 'x': row['x'],
                                 'y': row['y'],
                                 'dx': row['dx'],
-                                'dy': 'dy'}, ignore_index=True)
+                                'dy': row['dy']}, ignore_index=True)
     df.to_csv(os.path.join(outdir, 'all_patches.csv'), index=False)
 
 

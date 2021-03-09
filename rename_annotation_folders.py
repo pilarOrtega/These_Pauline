@@ -18,6 +18,7 @@ if __name__ == "__main__":
                     new_name = fn.name.replace(" - ", "_")
                     new_name = new_name.replace(" ", "")
                     new_name = unidecode(new_name)
+                    fn.replace(fn.parent/new_name)
                     prop_file = fn/"Slidedat.ini"
                     try:
                         with prop_file.open("r") as f:
@@ -38,7 +39,6 @@ if __name__ == "__main__":
                     except IndexError:
                         with prop_file.open("w") as f:
                             f.write("\n".join(lines))
-                        fn.replace(fn.parent/new_name)
                         continue
                     with prop_file.open("w") as f:
                         f.write("\n".join(lines))

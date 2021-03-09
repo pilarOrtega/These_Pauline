@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from pathlib import Path
 from tqdm import tqdm
+from unidecode import unidecode
 import glob
 import os
 
@@ -15,8 +16,7 @@ if __name__ == "__main__":
             if fn.is_dir():
                 new_name = fn.name.replace(" - ", "_")
                 new_name = new_name.replace(" ", "")
-                new_name = new_name.replace("è", "e")
-                new_name = new_name.replace("é", "e")
+                new_name = unidecode(new_name)
                 prop_file = fn/"Slidedat.ini"
                 try:
                     with prop_file.open("r") as f:
@@ -42,6 +42,5 @@ if __name__ == "__main__":
             else:
                 new_name = fn.name.replace(" - ", "_")
                 new_name = new_name.replace(" ", "")
-                new_name = new_name.replace("è", "e")
-                new_name = new_name.replace("é", "e")
+                new_name = unidecode(new_name)
             fn.rename(fn.parent/new_name)

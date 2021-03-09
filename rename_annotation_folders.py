@@ -35,6 +35,9 @@ if __name__ == "__main__":
                     line = line.replace(f" {number}", f"{number}")
                     lines.insert(2, line)
                 except IndexError:
+                    with prop_file.open("w") as f:
+                        f.write("\n".join(lines))
+                    fn.replace(fn.parent/new_name)
                     continue
                 with prop_file.open("w") as f:
                     f.write("\n".join(lines))

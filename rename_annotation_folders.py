@@ -42,4 +42,4 @@ if __name__ == "__main__":
                 new_name = fn.name.replace(" - ", "_")
                 new_name = new_name.replace(" ", "")
                 new_name = unidecode(new_name)
-            fn.rename(fn.parent/new_name)
+            fn.replace(fn.parent/new_name)

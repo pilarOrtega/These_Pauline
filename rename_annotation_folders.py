@@ -25,7 +25,7 @@ if __name__ == "__main__":
                             lines = f.read().split("\n")
                     except FileNotFoundError:
                         print('Not a slide folder')
-                        break
+                        continue
                     lines.insert(3, "OBJECTIVE_MAGNIFICATION = 20")
                     line = lines.pop(2)
                     line = line.replace(" - ", "_")

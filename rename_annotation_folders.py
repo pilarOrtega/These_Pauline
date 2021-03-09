@@ -27,8 +27,7 @@ if __name__ == "__main__":
                 lines.insert(3, "OBJECTIVE_MAGNIFICATION = 20")
                 line = lines.pop(2)
                 line = line.replace(" - ", "_")
-                line = line.replace("è", "e")
-                line = line.replace("é", "e")
+                line = unidecode(line)
                 lines.insert(2, line)
                 try:
                     line = lines.pop(2)

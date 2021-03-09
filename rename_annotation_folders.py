@@ -15,6 +15,8 @@ if __name__ == "__main__":
             if fn.is_dir():
                 new_name = fn.name.replace(" - ", "_")
                 new_name = new_name.replace(" ", "")
+                new_name = new_name.replace("è", "e")
+                new_name = new_name.replace("é", "e")
                 prop_file = fn/"Slidedat.ini"
                 try:
                     with prop_file.open("r") as f:
@@ -25,7 +27,11 @@ if __name__ == "__main__":
                 lines.insert(3, "OBJECTIVE_MAGNIFICATION = 20")
                 line = lines.pop(2)
                 line = line.replace(" - ", "_")
+                line = line.replace("è", "e")
+                line = line.replace("é", "e")
+                lines.insert(2, line)
                 try:
+                    line = lines.pop(2)
                     number = line.split(" ")[3]
                     line = line.replace(f" {number}", f"{number}")
                     lines.insert(2, line)
@@ -36,4 +42,6 @@ if __name__ == "__main__":
             else:
                 new_name = fn.name.replace(" - ", "_")
                 new_name = new_name.replace(" ", "")
+                new_name = new_name.replace("è", "e")
+                new_name = new_name.replace("é", "e")
             fn.rename(fn.parent/new_name)

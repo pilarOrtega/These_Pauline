@@ -120,13 +120,11 @@ def main():
     proj_dir = args.projdir
 
     for slidename, ptc_folder in get_patch_folders_in_project(proj_dir):
-        print(slidename)
-        print(ptc_folder)
         try:
             patches_csv = get_patch_csv_from_patch_folder(ptc_folder)
             patches = pd.read_csv(patches_csv)
             slidename_short = slidename.split('_')[2]
-            slidename_short = slidename[:9]
+            slidename_short = slidename_short[:9]
             type = os.path.dirname(ptc_folder)
             type = os.path.basename(type)
             size = len(patches)

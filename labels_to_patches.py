@@ -80,7 +80,7 @@ logger.addHandler(f_handler)
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--data" type=str,
+parser.add_argument("--data", type=str,
                     help="data file.")
 parser.add_argument("--projdir", type=str,
                     help="pathaia dataset directory.")

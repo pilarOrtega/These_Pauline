@@ -109,7 +109,7 @@ def get_patch_folders_in_project(project_folder):
         )
     for class_folder in glob(os.path.join(project_folder, '*')):
         for name in os.listdir(class_folder):
-            patch_folder = os.path.join(project_folder, name)
+            patch_folder = os.path.join(class_folder, name)
             if os.path.isdir(patch_folder):
                 yield name, patch_folder
 
@@ -120,12 +120,13 @@ def main():
     proj_dir = args.projdir
 
     for slidename, ptc_folder in get_patch_folders_in_project(proj_dir):
+        print(slidename)
+        print(ptc_folder)
         try:
             patches_csv = get_patch_csv_from_patch_folder(ptc_folder)
             patches = pd.read_csv(patches_csv)
             slidename_short = slidename.split('_')[2]
             slidename_short = slidename[:9]
-            patient_row = data.loc[slidename_short]
             type = os.path.dirname(ptc_folder)
             type = os.path.basename(type)
             size = len(patches)
@@ -143,8 +144,12 @@ def main():
             patches['Task_1'] = [t1 for n in range(size)]
             patches['Task_2'] = [t2 for n in range(size)]
             patches['Task_3'] = [t3 for n in range(size)]
-            patches['Task_4'] = [patient_row['GC_non_GC'] for n in range(size)]
-            # rewrite dataframe
+            try:
+                patient_row = data.loc[slidename_short]
+                patches['Task_4'] = [patient_row['GC_non_GC'] for n in range(size)]
+            except KeyError as e:
+                logger.warning(str(e))
+                # rewrite dataframe
             patches.to_csv(patches_csv)
         except PatchesNotFoundError as e:
             logger.warning(str(e))

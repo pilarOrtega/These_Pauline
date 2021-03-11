@@ -19,7 +19,15 @@ def main():
     outdir = args.outdir
     df = pd.DataFrame([], columns=['Slide', 'Diagnostic', 'Annotation', 'level', 'x', 'y', 'dx', 'dy'])
     folder_list = glob.glob(os.path.join(input, '*'))
-    cat_list = ['DHL_BCL2', 'DHL_BCL6', 'DLBCL_sans_rearrangement', 'THL']
+    cat_list = ['DHL_BCL2',
+                'DHL_BCL6',
+                'DLBCL_sans_rearrangement',
+                'THL',
+                'Burkitt',
+                'MYC_rearrange_seul',
+                'MYC_rearrange_seul_ou_DHL_BCL6',
+                'Architecture_ganglion_normal',
+                'Artefacts']
     folder_list = [f for f in folder_list if os.path.basename(f) in cat_list]
     for folder in tqdm(folder_list):
         print(f'Retrieving patches from {folder}')

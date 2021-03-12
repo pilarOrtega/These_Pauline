@@ -21,7 +21,8 @@ f_handler = logging.FileHandler('fit.log')
 c_handler.setLevel(logging.DEBUG)
 f_handler.setLevel(logging.DEBUG)
 c_format = logging.Formatter('%(name)s - [%(levelname)s] - %(message)s')
-f_format = logging.Formatter('%(asctime)s - %(name)s - [%(levelname)s] - %(message)s')
+f_format = logging.Formatter(
+    '%(asctime)s - %(name)s - [%(levelname)s] - %(message)s')
 c_handler.setFormatter(c_format)
 f_handler.setFormatter(f_format)
 logger.addHandler(c_handler)
@@ -144,6 +145,12 @@ def main():
     training_cfg = cfg["training"]
     experiment_cfg = cfg["experiment"]
     archi_cfg = cfg["architecture"]
+    logger.info(
+        f"Conf data - level: {data_cfg['level']}, size: {data_cfg['size']} ")
+    logger.info(
+        f"Conf training - batch: {training_cfg['batch']}, epochs: {training_cfg['epochs']}, lr: {training_cfg['lr']}, loss: {training_cfg['loss']}, workers: {training_cfg['workers']}")
+    logger.info(
+        f"Conf experiments - folds: {experiment_cfg['folds']}, split: {experiment_cfg['split']}")
     for task in data_cfg["tasks"]:
         logger.info("Prediction of task: '{}'".format(task))
         handler = data.PathaiaHandler(proj_dir, slide_dir)
@@ -154,8 +161,10 @@ def main():
         )
         patches, labels = get_whole_dataset(ptcs, tags)
         n_classes = len(np.unique(labels))
-        logger.debug("classes found for this task: {}".format(np.unique(labels)))
-        logger.debug("counts: {}".format(np.unique(labels, return_counts=True)))
+        logger.debug(
+            "classes found for this task: {}".format(np.unique(labels)))
+        logger.debug("counts: {}".format(
+            np.unique(labels, return_counts=True)))
         splitter = StratifiedShuffleSplit(
             n_splits=experiment_cfg["folds"],
             test_size=experiment_cfg["split"],
@@ -193,7 +202,8 @@ def main():
                 metrics=["accuracy"]
             )
             logger.info(
-                "Running {} fit-test procedures".format(experiment_cfg["folds"])
+                "Running {} fit-test procedures".format(
+                    experiment_cfg["folds"])
             )
             run_history = dict()
             runs = 1
@@ -217,6 +227,12 @@ def main():
                         )
                 logger.info(
                     "Run {}/{}".format(runs, experiment_cfg["folds"])
+                )
+                logger.info(
+                    f"Train slides: {len(train_slides)} - Test slides: {len(test_slides)}"
+                )
+                logger.info(
+                    f"Train patches: {len(xtrain)} - Test patches: {len(ytrain)}"
                 )
                 # create data generators
                 train_gen = data.DataGenerator(
@@ -245,7 +261,8 @@ def main():
                 run_history[runs] = fit_history
                 runs += 1
             outf = os.path.join(output_dir, "fit_goya_output.csv")
-            write_experiment(outf, task, name, data_cfg, training_cfg, run_history)
+            write_experiment(outf, task, name, data_cfg,
+                             training_cfg, run_history)
 
 
 if __name__ == "__main__":

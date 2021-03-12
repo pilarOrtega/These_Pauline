@@ -220,7 +220,7 @@ def main():
                         ytrain.append(labels[i])
                     elif patches[i]['slide'] in test_slides:
                         xtest.append(patches[i])
-                        ytrain.append(labels[i])
+                        ytest.append(labels[i])
                     else:
                         logger.info(
                             f"{patches[i]['slide']} not in train/test partition!!"
@@ -232,7 +232,7 @@ def main():
                     f"Train slides: {len(train_slides)} - Test slides: {len(test_slides)}"
                 )
                 logger.info(
-                    f"Train patches: {len(xtrain)} - Test patches: {len(ytrain)}"
+                    f"Train patches: {len(xtrain)} - Test patches: {len(xtest)}"
                 )
                 # create data generators
                 train_gen = data.DataGenerator(

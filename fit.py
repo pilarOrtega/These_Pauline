@@ -206,11 +206,11 @@ def main():
                 xtrain, xtest, ytrain, ytest = [], [], [], []
                 for i in range(len(patches)):
                     if patches[i]['slide'] in train_slides:
-                        xtrain.append[patches[i]]
-                        ytrain.append[labels[i]]
+                        xtrain.append(patches[i])
+                        ytrain.append(labels[i])
                     elif patches[i]['slide'] in test_slides:
-                        xtest.append[patches[i]]
-                        ytrain.append[labels[i]]
+                        xtest.append(patches[i])
+                        ytrain.append(labels[i])
                     else:
                         logger.info(
                             f"{patches[i]['slide']} not in train/test partition!!"

@@ -231,8 +231,11 @@ def main():
                 logger.info(
                     f"Train slides: {len(train_slides)} - Test slides: {len(test_slides)}"
                 )
-                logger.info(
+                logger.debug(
                     f"Train patches: {len(xtrain)} - Test patches: {len(xtest)}"
+                )
+                logger.debug(
+                    f"Train patches: {len(ytrain)} - Test patches: {len(ytest)}"
                 )
                 # create data generators
                 train_gen = data.DataGenerator(

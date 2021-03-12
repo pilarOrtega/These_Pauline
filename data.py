@@ -8,6 +8,7 @@ import os
 import openslide
 import warnings
 import tensorflow as tf
+from glob import glob
 
 
 class Error(Exception):
@@ -88,9 +89,9 @@ def get_patch_folders_in_project(project_folder):
         raise EmptyProjectError(
             "Did not find any project at: {}".format(project_folder)
         )
-    for name in os.listdir(project_folder):
-        if "annotation" not in name:
-            patch_folder = os.path.join(project_folder, name)
+    for class_folder in glob(os.path.join(project_folder, '*')):
+        for name in os.listdir(class_folder):
+            patch_folder = os.path.join(class_folder, name)
             if os.path.isdir(patch_folder):
                 yield name, patch_folder
 

@@ -263,7 +263,7 @@ def main():
                 )
                 run_history[runs] = fit_history
                 runs += 1
-            outf = os.path.join(output_dir, "fit_goya_output.csv")
+            outf = os.path.join(output_dir, "fit_output.csv")
             write_experiment(outf, task, name, data_cfg,
                              training_cfg, run_history)
 

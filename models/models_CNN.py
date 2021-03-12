@@ -41,7 +41,7 @@ models = {
     },
     'customLenet': {
         'model': Lenet,
-        'module': xception.preprocess_input
+        'module': xception
     }
 }
 

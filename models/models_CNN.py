@@ -1,5 +1,4 @@
-from tensorflow.keras.applications import VGG16, Xception, ResNet50
-from tensorflow.keras.applications import resnet50, xception, vgg16
+from tensorflow.keras.applications import *
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import MaxPooling2D
 from tensorflow.keras.layers import Conv2D
@@ -28,20 +27,32 @@ class Lenet(Model):
 
 models = {
     'ResNet50': {
-        'model': ResNet50,
+        'model': resnet50.ResNet50,
         'module': resnet50
     },
     'VGG16': {
-        'model': VGG16,
+        'model': vgg16.VGG16,
         'module': vgg16
     },
     'Xception': {
-        'model': Xception,
+        'model': xception.Xception,
         'module': xception
     },
     'customLenet': {
         'model': Lenet,
         'module': xception
+    },
+    'DenseNet121': {
+        'model': densenet.DenseNet121,
+        'module': densenet
+    },
+    'DenseNet169': {
+        'model': densenet.DenseNet169,
+        'module': densenet
+    },
+    'NASNet': {
+        'model': nasnet.NASNetMobile,
+        'module': nasnet
     }
 }
 

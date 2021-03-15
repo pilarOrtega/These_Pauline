@@ -12,6 +12,7 @@ from keras.optimizers import Adam
 import numpy as np
 import yaml
 from tensorflow.keras.layers import Input
+from sklearn.metrics import classification_report, confusion_matrix
 
 
 logger = logging.getLogger(__name__)
@@ -263,6 +264,18 @@ def main():
                 )
                 run_history[runs] = fit_history
                 runs += 1
+
+                # Confution Matrix and Classification Report
+                Y_pred = model.predict(
+                    test_gen,
+                    use_multiprocessing=True,
+                    workers=training_cfg["workers"]
+                )
+                y_pred = np.argmax(Y_pred, axis=1)
+                logger.info('Confusion Matrix')
+                logger.info(confusion_matrix(test_gen.classes, y_pred))
+                logger.info('Classification Report')
+                logger.info(classification_report(test_gen.classes))
             outf = os.path.join(output_dir, "fit_output.csv")
             write_experiment(outf, task, name, data_cfg,
                              training_cfg, run_history)

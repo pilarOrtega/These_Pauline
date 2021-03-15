@@ -266,8 +266,16 @@ def main():
                 runs += 1
 
                 # Confution Matrix and Classification Report
+                test_gen_p = data.DataGenerator(
+                    xtest, ytest, preproc,
+                    batch_size=1,
+                    dim=(data_cfg["size"], data_cfg["size"]),
+                    n_channels=data_cfg["channels"],
+                    n_classes=n_classes,
+                    shuffle=False
+                )
                 Y_pred = model.predict(
-                    test_gen,
+                    test_gen_p,
                     use_multiprocessing=True,
                     workers=training_cfg["workers"]
                 )

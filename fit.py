@@ -273,9 +273,9 @@ def main():
                 )
                 y_pred = np.argmax(Y_pred, axis=1)
                 logger.info('Confusion Matrix')
-                logger.info(confusion_matrix(test_gen.classes, y_pred))
+                logger.info(confusion_matrix(ytest, y_pred))
                 logger.info('Classification Report')
-                logger.info(classification_report(test_gen.classes))
+                logger.info(classification_report(ytest, y_pred))
             outf = os.path.join(output_dir, "fit_output.csv")
             write_experiment(outf, task, name, data_cfg,
                              training_cfg, run_history)

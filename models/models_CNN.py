@@ -30,18 +30,6 @@ models = {
         'model': resnet50.ResNet50,
         'module': resnet50
     },
-    'VGG16': {
-        'model': vgg16.VGG16,
-        'module': vgg16
-    },
-    'Xception': {
-        'model': xception.Xception,
-        'module': xception
-    },
-    'customLenet': {
-        'model': Lenet,
-        'module': xception
-    },
     'DenseNet121': {
         'model': densenet.DenseNet121,
         'module': densenet
@@ -53,6 +41,18 @@ models = {
     'NASNet': {
         'model': nasnet.NASNetMobile,
         'module': nasnet
+    },
+    'VGG16': {
+        'model': vgg16.VGG16,
+        'module': vgg16
+    },
+    'Xception': {
+        'model': xception.Xception,
+        'module': xception
+    },
+    'customLenet': {
+        'model': Lenet,
+        'module': xception
     }
 }
 

@@ -15,8 +15,10 @@ training:
   loss: categorical_crossentropy
   workers: 16
   pretrain: null
+  balanced: True
+  data_augmentation: False
 experiment:
-  folds: 3
+  folds: 1
   split: 0.20
   seed: 42
 architecture:

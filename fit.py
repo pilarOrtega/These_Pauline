@@ -96,6 +96,8 @@ def write_experiment(filepath, task, archi, data_cfg, training_cfg, history):
     batch = training_cfg["batch"]
     loss = training_cfg["loss"]
     lr = training_cfg["lr"]
+    bal = training_cfg["balanced"]
+    da = training_cfg['data_augmentation']
     df_dict = {
         "Task": [],
         "Archi": [],
@@ -107,7 +109,9 @@ def write_experiment(filepath, task, archi, data_cfg, training_cfg, history):
         "Value": [],
         "Batch": [],
         "Loss": [],
-        "Lr": []
+        "Lr": [],
+        "Balanced": [],
+        "Data_augmentation": []
     }
     for run, keras_hist in history.items():
         for metric, values in keras_hist.history.items():
@@ -123,6 +127,8 @@ def write_experiment(filepath, task, archi, data_cfg, training_cfg, history):
                 df_dict["Batch"].append(batch)
                 df_dict["Loss"].append(loss)
                 df_dict["Lr"].append(lr)
+                df_dict["Balanced"].append(bal)
+                df_dict["Data_augmentation"].append(da)
     # put data into a dataframe
     df = pd.DataFrame()
     for name, vals in df_dict.items():
@@ -149,7 +155,7 @@ def main():
     logger.info(
         f"Conf data - level: {data_cfg['level']}, size: {data_cfg['size']} ")
     logger.info(
-        f"Conf training - batch: {training_cfg['batch']}, epochs: {training_cfg['epochs']}, lr: {training_cfg['lr']}, loss: {training_cfg['loss']}, workers: {training_cfg['workers']}")
+        f"Conf training - batch: {training_cfg['batch']}, epochs: {training_cfg['epochs']}, lr: {training_cfg['lr']}, loss: {training_cfg['loss']}, workers: {training_cfg['workers']}, balanced: {training_cfg['balanced']}, data_augmentation: {training_cfg['data_augmentation']}")
     logger.info(
         f"Conf experiments - folds: {experiment_cfg['folds']}, split: {experiment_cfg['split']}")
     for task in data_cfg["tasks"]:

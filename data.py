@@ -250,6 +250,7 @@ class DataGenerator(keras.utils.Sequence):
         # Generate data
         for i, ID in enumerate(list_IDs_temp):
             # Put image data into a batch array
+            print(ID)
             X[i, ] = slide_query(self.list_IDs[ID])
 
             # Store class

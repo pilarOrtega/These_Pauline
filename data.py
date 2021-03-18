@@ -190,7 +190,6 @@ class DataGenerator(keras.utils.Sequence):
         'Generate one batch of data'
         # Generate indexes of the batch
         indexes = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
-
         # Generate data
         X, y = self.__data_generation(indexes)
 
@@ -255,7 +254,9 @@ class DataGenerator(keras.utils.Sequence):
 
             # Store class
             y[i] = self.labels[ID]
-
+        print(ID)
+        print(X[0])
+        print(y[0])
         return self.preproc(X), keras.utils.to_categorical(y, num_classes=self.n_classes)
 
 

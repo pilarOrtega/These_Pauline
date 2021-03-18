@@ -251,7 +251,8 @@ def main():
                     dim=(data_cfg["size"], data_cfg["size"]),
                     n_channels=data_cfg["channels"],
                     n_classes=n_classes,
-                    shuffle=True
+                    shuffle=True,
+                    balanced=True,
                 )
                 test_gen = data.DataGenerator(
                     xtest, ytest, preproc,
@@ -259,7 +260,8 @@ def main():
                     dim=(data_cfg["size"], data_cfg["size"]),
                     n_channels=data_cfg["channels"],
                     n_classes=n_classes,
-                    shuffle=True
+                    shuffle=True,
+                    balanced=False,
                 )
                 fit_history = model.fit(
                     train_gen,

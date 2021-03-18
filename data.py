@@ -160,28 +160,6 @@ def slide_query(patch):
     return np.array(pil_img)[:, :, 0:3]
 
 
-def get_idxs(tree, num_samples):
-    idxs = []
-    for _ in range(self.num_samples):
-        x = np.random.uniform(size=3)
-        classes = list(self.tree.keys())
-        cl = classes[int(x[0]*len(classes))]
-        cl_slides = self.tree[cl]
-        slides = list(cl_slides.keys())
-        slide = slides[int(x[1]*len(slides))]
-        slide_patches = cl_slides[slide]
-        idx = int(x[2]*len(slide_patches))
-        if self.replacement:
-            patch = slide_patches[idx]
-        else:
-            patch = slide_patches.pop(idx)
-            if len(slide_patches) == 0:
-                cl_slides.pop(slide)
-                if len(cl_slides) == 0:
-                    self.tree.pop(cl)
-        idxs.append(patch)
-    return idxs
-
 class DataGenerator(keras.utils.Sequence):
 
     def __init__(self, list_IDs, labels, preproc,

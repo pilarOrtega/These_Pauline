@@ -254,9 +254,7 @@ class DataGenerator(keras.utils.Sequence):
 
             # Store class
             y[i] = self.labels[ID]
-        print(ID)
-        print(X[0])
-        print(y[0])
+
         return self.preproc(X), keras.utils.to_categorical(y, num_classes=self.n_classes)
 
 

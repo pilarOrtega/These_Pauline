@@ -214,7 +214,7 @@ class DataGenerator(keras.utils.Sequence):
                 n_patches = [len(self.tree[c][s]) for s in self.tree[c].keys()]
                 for i in range(min(n_slides)):
                     self.num_samples += min(1000, n_patches[i])
-            self.indexes = self.get_idxs(self)
+            self.indexes = self.get_idxs()
 
         if self.shuffle:
             np.random.shuffle(self.indexes)

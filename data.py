@@ -164,17 +164,21 @@ class DataGenerator(keras.utils.Sequence):
 
     def __init__(self, list_IDs, labels, preproc,
                  batch_size=32, dim=(256, 256),
-                 n_channels=3,
+                 n_channels=3, balanced=True,
+                 num_samples=None, replacement=True,
                  n_classes=10, shuffle=True):
         'Initialization'
         self.dim = dim
         self.batch_size = batch_size
-        self.labels = labels
+        self.classes, self.labels = np.unique(labels, return_inverse=True)
         self.list_IDs = list_IDs
         self.n_channels = n_channels
         self.n_classes = n_classes
         self.shuffle = shuffle
         self.preproc = preproc
+        self.balanced = balanced
+        self.num_samples = num_samples
+        self.replacement = replacement
         self.on_epoch_end()
 
     def __len__(self):
@@ -186,9 +190,6 @@ class DataGenerator(keras.utils.Sequence):
         # Generate indexes of the batch
         indexes = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
 
-        # Find list of IDs
-        list_IDs_temp = [self.list_IDs[k] for k in indexes]
-
         # Generate data
         X, y = self.__data_generation(indexes)
 
@@ -197,8 +198,49 @@ class DataGenerator(keras.utils.Sequence):
     def on_epoch_end(self):
         'Updates indexes after each epoch'
         self.indexes = np.arange(len(self.list_IDs))
+        if self.balanced:
+            self.tree = {}
+            patch_slides = [x['slide'] for x in self.list_IDs]
+            patch_slides = np.asarray(patch_slides)
+            for cl in np.arange(len(self.classes)):
+                self.tree[cl] = {}
+                slides = [self.list_IDs[i]['slide'] for i in range(len(self.labels)) if self.labels[i]==cl]
+                for slide in np.unique(slides):
+                    self.tree[cl][slide] = (np.argwhere(patch_slides == slide).squeeze(1).tolist())
+
+            n_slides = [len(self.tree[c]) for c in self.tree.keys()]
+            self.num_samples = 0
+            for c in self.tree.keys():
+                n_patches = [len(self.tree[c][s]) for s in self.tree[c].keys()]
+                for i in range(min(n_slides)):
+                    self.num_samples += min(1000, n_patches[i])
+            self.indexes = self.get_idxs(self)
+
         if self.shuffle:
             np.random.shuffle(self.indexes)
+
+    def get_idxs(self):
+
+        idxs = []
+        for _ in range(self.num_samples):
+            x = np.random.uniform(size=3)
+            classes = list(self.tree.keys())
+            cl = classes[int(x[0]*len(classes))]
+            cl_slides = self.tree[cl]
+            slides = list(cl_slides.keys())
+            slide = slides[int(x[1]*len(slides))]
+            slide_patches = cl_slides[slide]
+            idx = int(x[2]*len(slide_patches))
+            if self.replacement:
+                patch = slide_patches[idx]
+            else:
+                patch = slide_patches.pop(idx)
+                if len(slide_patches) == 0:
+                    cl_slides.pop(slide)
+                    if len(cl_slides) == 0:
+                        self.tree.pop(cl)
+            idxs.append(patch)
+        return idxs
 
     def __data_generation(self, list_IDs_temp):
         'Generates data containing batch_size samples'  # X : (n_samples, *dim, n_channels)

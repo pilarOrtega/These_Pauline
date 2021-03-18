@@ -160,6 +160,28 @@ def slide_query(patch):
     return np.array(pil_img)[:, :, 0:3]
 
 
+def get_idxs(tree, num_samples):
+    idxs = []
+    for _ in range(self.num_samples):
+        x = np.random.uniform(size=3)
+        classes = list(self.tree.keys())
+        cl = classes[int(x[0]*len(classes))]
+        cl_slides = self.tree[cl]
+        slides = list(cl_slides.keys())
+        slide = slides[int(x[1]*len(slides))]
+        slide_patches = cl_slides[slide]
+        idx = int(x[2]*len(slide_patches))
+        if self.replacement:
+            patch = slide_patches[idx]
+        else:
+            patch = slide_patches.pop(idx)
+            if len(slide_patches) == 0:
+                cl_slides.pop(slide)
+                if len(cl_slides) == 0:
+                    self.tree.pop(cl)
+        idxs.append(patch)
+    return idxs
+
 class DataGenerator(keras.utils.Sequence):
 
     def __init__(self, list_IDs, labels, preproc,
@@ -184,7 +206,7 @@ class DataGenerator(keras.utils.Sequence):
 
     def __len__(self):
         'Denotes the number of batches per epoch'
-        return int(np.floor(len(self.list_IDs) / self.batch_size))
+        return int(np.floor(len(self.indexes) / self.batch_size))
 
     def __getitem__(self, index):
         'Generate one batch of data'
@@ -197,7 +219,6 @@ class DataGenerator(keras.utils.Sequence):
 
     def on_epoch_end(self):
         'Updates indexes after each epoch'
-        self.indexes = np.arange(len(self.list_IDs))
         if self.balanced:
             self.tree = {}
             patch_slides = [x['slide'] for x in self.list_IDs]
@@ -215,6 +236,8 @@ class DataGenerator(keras.utils.Sequence):
                 for i in range(min(n_slides)):
                     self.num_samples += min(1000, n_patches[i])
             self.indexes = self.get_idxs()
+        else:
+            self.indexes = np.arange(len(self.list_IDs))
 
         if self.shuffle:
             np.random.shuffle(self.indexes)
@@ -250,7 +273,6 @@ class DataGenerator(keras.utils.Sequence):
         # Generate data
         for i, ID in enumerate(list_IDs_temp):
             # Put image data into a batch array
-            print(ID)
             X[i, ] = slide_query(self.list_IDs[ID])
 
             # Store class

@@ -280,7 +280,8 @@ def main():
                     dim=(data_cfg["size"], data_cfg["size"]),
                     n_channels=data_cfg["channels"],
                     n_classes=n_classes,
-                    shuffle=False
+                    shuffle=False,
+                    balanced=False,
                 )
                 Y_pred = model.predict(
                     test_gen_p,

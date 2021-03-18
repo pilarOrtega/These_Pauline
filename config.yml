@@ -1,5 +1,5 @@
 # goya config file for deep learning keras applications
-date: 2021-03-12
+date: 2021-03-18
 data:
   level: 0
   size: 224
@@ -10,7 +10,7 @@ data:
     - Task_3
 training:
   batch: 64
-  epochs: 10
+  epochs: 20
   lr: 0.0001
   loss: categorical_crossentropy
   workers: 16

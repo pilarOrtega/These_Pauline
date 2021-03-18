@@ -212,7 +212,7 @@ class DataGenerator(keras.utils.Sequence):
             for c in self.tree.keys():
                 n_patches = [len(self.tree[c][s]) for s in self.tree[c].keys()]
                 for i in range(min(n_slides)):
-                    self.num_samples += min(1000, n_patches[i])
+                    self.num_samples += min(500, n_patches[i])
             self.indexes = self.get_idxs()
         else:
             self.indexes = np.arange(len(self.list_IDs))

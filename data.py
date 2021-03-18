@@ -170,7 +170,8 @@ class DataGenerator(keras.utils.Sequence):
         'Initialization'
         self.dim = dim
         self.batch_size = batch_size
-        self.classes, self.labels = np.unique(labels, return_inverse=True)
+        self.classes = np.unique(labels)
+        self.labels = labels
         self.list_IDs = list_IDs
         self.n_channels = n_channels
         self.n_classes = n_classes
@@ -220,7 +221,6 @@ class DataGenerator(keras.utils.Sequence):
             np.random.shuffle(self.indexes)
 
     def get_idxs(self):
-
         idxs = []
         for _ in range(self.num_samples):
             x = np.random.uniform(size=3)

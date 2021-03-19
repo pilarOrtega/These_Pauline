@@ -140,7 +140,6 @@ class PathaiaHandler(object):
                 slide_path = get_slide_file(self.slide_folder, name, patch_folder)
                 patch_file = get_patch_csv_from_patch_folder(patch_folder)
                 slide_name = name.split('_')[2]
-                slide_name = slide_name[:9]
                 # read patch file and get the right level
                 for x, y, lab in handle_patch_file(patch_file, level, label):
                     patch_list.append(
@@ -166,6 +165,7 @@ class DataGenerator(keras.utils.Sequence):
                  batch_size=32, dim=(256, 256),
                  n_channels=3, balanced=True,
                  num_samples=None, replacement=True,
+                 data_augmentation=False,
                  n_classes=10, shuffle=True):
         'Initialization'
         self.dim = dim
@@ -180,6 +180,7 @@ class DataGenerator(keras.utils.Sequence):
         self.balanced = balanced
         self.num_samples = num_samples
         self.replacement = replacement
+        self.data_augmentation = data_augmentation
         self.on_epoch_end()
 
     def __len__(self):

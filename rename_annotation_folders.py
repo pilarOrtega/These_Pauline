@@ -5,6 +5,7 @@ from unidecode import unidecode
 import glob
 import os
 
+# Script that deletes blanc spaces, accents and other annoying things from slides
 parser = ArgumentParser()
 parser.add_argument("--infolder", type=Path)
 

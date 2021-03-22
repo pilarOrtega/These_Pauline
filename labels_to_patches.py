@@ -128,7 +128,7 @@ def main():
                 logger.warning(str(e))
                 # rewrite dataframe
             patches.to_csv(patches_csv)
-        except PatchesNotFoundError as e:
+        except data.PatchesNotFoundError as e:
             logger.warning(str(e))
 
 

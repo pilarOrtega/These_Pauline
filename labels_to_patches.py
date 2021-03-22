@@ -2,8 +2,7 @@ import os
 import argparse
 import logging
 import pandas as pd
-from data import *
-
+from glob import glob
 
 
 class Error(Exception):
@@ -87,6 +86,31 @@ parser.add_argument("--projdir", type=str,
                     help="pathaia dataset directory.")
 
 args = parser.parse_args()
+
+
+def get_patch_csv_from_patch_folder(patch_folder):
+    if os.path.isdir(patch_folder):
+        patch_file = os.path.join(patch_folder, "patches.csv")
+        if os.path.exists(patch_file):
+            return patch_file
+        raise PatchesNotFoundError(
+            "Could not find extracted patches for the slide: {}".format(patch_folder)
+        )
+    raise SlideNotFoundError(
+        "Could not find a patch folder at: {}!!!".format(patch_folder)
+    )
+
+
+def get_patch_folders_in_project(project_folder):
+    if not os.path.isdir(project_folder):
+        raise EmptyProjectError(
+            "Did not find any project at: {}".format(project_folder)
+        )
+    for class_folder in glob(os.path.join(project_folder, '*')):
+        for name in os.listdir(class_folder):
+            patch_folder = os.path.join(class_folder, name)
+            if os.path.isdir(patch_folder):
+                yield name, patch_folder
 
 
 def main():

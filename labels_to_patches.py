@@ -146,7 +146,7 @@ def main():
             try:
                 patient_row = data.loc[slidename_short]
                 if type in ['Architecture_ganglion_normal', 'Autres_tissus', 'Artefacts']:
-                    patches['Task_4'] = ['N' for n in range(size)]
+                    patches['Task_4'] = ['NA' for n in range(size)]
                 else:
                     patches['Task_4'] = [patient_row['GC_non_GC'] for n in range(size)]
             except KeyError as e:

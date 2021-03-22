@@ -2,7 +2,7 @@ import os
 import argparse
 import logging
 import pandas as pd
-from data import get_patch_folders_in_project, get_patch_csv_from_patch_folder
+from data import get_patch_folders_in_project, get_patch_csv_from_patch_folder, PatchesNotFoundError
 
 
 class Error(Exception):
@@ -128,7 +128,7 @@ def main():
                 logger.warning(str(e))
                 # rewrite dataframe
             patches.to_csv(patches_csv)
-        except data.PatchesNotFoundError as e:
+        except PatchesNotFoundError as e:
             logger.warning(str(e))
 
 

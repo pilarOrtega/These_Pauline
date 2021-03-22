@@ -89,7 +89,7 @@ args = parser.parse_args()
 
 
 def main():
-    data = pd.read_csv(args.data)
+    data = pd.read_csv(args.data, sep=None, engine='python')
     data.set_index("NUM_anapath", inplace=True)
     proj_dir = args.projdir
 

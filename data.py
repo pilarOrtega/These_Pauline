@@ -9,6 +9,11 @@ import openslide
 import warnings
 import tensorflow as tf
 from glob import glob
+from nptyping import NDArray
+from typing import List, Optional, Any
+from numbers import Number
+from staintools.miscellaneous.get_concentrations import get_concentrations
+import albumentations as a
 
 
 class Error(Exception):
@@ -123,7 +128,7 @@ def handle_patch_file(patch_file, level, column):
             "Column {} does not exists in {}!!!".format(column, patch_file)
         )
     for _, row in level_df.iterrows():
-        yield row["x"], row["y"], row[column]
+        yield row["x"], row["y"], row[column], row["dx"], row["dy"]
 
 
 class PathaiaHandler(object):
@@ -141,10 +146,10 @@ class PathaiaHandler(object):
                 patch_file = get_patch_csv_from_patch_folder(patch_folder)
                 slide_name = name.split('_')[2]
                 # read patch file and get the right level
-                for x, y, lab in handle_patch_file(patch_file, level, label):
+                for x, y, lab, dx, dy in handle_patch_file(patch_file, level, label):
                     patch_list.append(
                         {"slide_path": slide_path, "slide": slide_name,
-                         "x": x, "y": y, "level": level, "dimensions": dim}
+                         "x": x, "y": y, "level": level, "dimensions": dim, "dx": dx, "dy": dy}
                     )
                     labels.append(lab)
             except (PatchesNotFoundError, UnknownColumnError, SlideNotFoundError) as e:
@@ -157,6 +162,18 @@ def slide_query(patch):
     pil_img = slide.read_region((patch["x"], patch["y"]),
                                 patch["level"], patch["dimensions"])
     return np.array(pil_img)[:, :, 0:3]
+
+
+def random_modif(patch, alpha=0.2, beta=0.2):
+    x = np.random.uniform(low=-1, size=2)
+    patch["x"] = patch["x"] + patch["dx"]*alpha*x[0]
+    patch["y"] = patch["y"] + patch["dy"]*beta*x[1]
+    return patch
+
+
+def ifnone(a: Any, b: Any) -> Any:
+    "`b` if `a` is None else `a`"
+    return b if a is None else a
 
 
 class DataGenerator(keras.utils.Sequence):
@@ -204,7 +221,7 @@ class DataGenerator(keras.utils.Sequence):
             patch_slides = np.asarray(patch_slides)
             for cl in np.arange(len(self.classes)):
                 self.tree[cl] = {}
-                slides = [self.list_IDs[i]['slide'] for i in range(len(self.labels)) if self.labels[i]==cl]
+                slides = [self.list_IDs[i]['slide'] for i in range(len(self.labels)) if self.labels[i] == cl]
                 for slide in np.unique(slides):
                     self.tree[cl][slide] = (np.argwhere(patch_slides == slide).squeeze(1).tolist())
 
@@ -252,12 +269,103 @@ class DataGenerator(keras.utils.Sequence):
         # Generate data
         for i, ID in enumerate(list_IDs_temp):
             # Put image data into a batch array
-            X[i, ] = slide_query(self.list_IDs[ID])
+            patch = self.list_IDs[ID]
+            if self.data_augmentation:
+                patch = random_modif(patch)
+            X[i, ] = slide_query(patch)
 
             # Store class
             y[i] = self.labels[ID]
 
         return self.preproc(X), keras.utils.to_categorical(y, num_classes=self.n_classes)
+
+
+# Cell
+class StainAugmentor(a.ImageOnlyTransform):
+    def __init__(
+        self,
+        alpha_range: float = 0.3,
+        beta_range: float = 0.3,
+        alpha_stain_range: float = 0.2,
+        beta_stain_range: float = 0.1,
+        he_ratio: float = 0.2,
+        always_apply: bool = True,
+        p: float = 1,
+    ):
+        super(StainAugmentor, self).__init__(always_apply, p)
+        self.alpha_range = alpha_range
+        self.beta_range = beta_range
+        self.alpha_stain_range = alpha_stain_range
+        self.beta_stain_range = beta_stain_range
+        self.he_ratio = he_ratio
+        self.stain_matrix = np.array(
+            [[0.56371366, 0.77129725, 0.29551221], [0.1378605, 0.82185632, 0.55276276]]
+        )
+
+    def get_params(self):
+        return {
+            "alpha": np.random.uniform(
+                1 - self.alpha_range, 1 + self.alpha_range, size=2
+            ),
+            "beta": np.random.uniform(-self.beta_range, self.beta_range, size=2),
+            "alpha_stain": np.stack(
+                (
+                    np.random.uniform(
+                        1 - self.alpha_stain_range * self.he_ratio,
+                        1 + self.alpha_stain_range * self.he_ratio,
+                        size=3,
+                    ),
+                    np.random.uniform(
+                        1 - self.alpha_stain_range,
+                        1 + self.alpha_stain_range,
+                        size=3,
+                    ),
+                ),
+            ),
+            "beta_stain": np.stack(
+                (
+                    np.random.uniform(
+                        -self.beta_stain_range * self.he_ratio,
+                        self.beta_stain_range * self.he_ratio,
+                        size=3,
+                    ),
+                    np.random.uniform(
+                        -self.beta_stain_range, self.beta_stain_range, size=3
+                    ),
+                ),
+            ),
+        }
+
+    def initialize(self, alpha, beta, shape=2):
+        alpha = ifnone(alpha, np.ones(shape))
+        beta = ifnone(beta, np.zeros(shape))
+        return alpha, beta
+
+    def apply(
+        self,
+        image: NDArray[(Any, Any, 3), Number],
+        alpha: Optional[NDArray[(2,), float]] = None,
+        beta: Optional[NDArray[(2,), float]] = None,
+        alpha_stain: Optional[NDArray[(2, 3), float]] = None,
+        beta_stain: Optional[NDArray[(2, 3), float]] = None,
+        **params
+    ) -> NDArray[(Any, Any, 3), Number]:
+        alpha, beta = self.initialize(alpha, beta, shape=2)
+        alpha_stain, beta_stain = self.initialize(alpha_stain, beta_stain, shape=(2, 3))
+        if not image.dtype == np.uint8:
+            image = (image * 255).astype(np.uint8)
+        # stain_matrix = VahadaneStainExtractor.get_stain_matrix(image)
+        HE = get_concentrations(image, self.stain_matrix)
+        # HE = convert_RGB_to_OD(image).reshape((-1, 3)) @ np.linalg.pinv(self.stain_matrix)
+        stain_matrix = self.stain_matrix * alpha_stain + beta_stain
+        stain_matrix = np.clip(stain_matrix, 0, 1)
+        HE = np.where(HE > 0.2, HE * alpha[None] + beta[None], HE)
+        out = np.exp(-np.dot(HE, stain_matrix)).reshape(image.shape)
+        out = np.clip(out, 0, 1)
+        return out.astype(np.float32)
+
+    def get_transform_init_args_names(self) -> List:
+        return ("alpha_range", "beta_range", "alpha_stain_range", "beta_stain_range", "he_ratio")
 
 
 def generator_fn(patch_list, label_list, preproc):

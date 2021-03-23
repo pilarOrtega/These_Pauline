@@ -252,7 +252,8 @@ def main():
                     n_channels=data_cfg["channels"],
                     n_classes=n_classes,
                     shuffle=True,
-                    balanced=True,
+                    balanced=training_cfg['balanced'],
+                    data_augmentation=training_cfg['data_augmentation']
                 )
                 test_gen = data.DataGenerator(
                     xtest, ytest, preproc,

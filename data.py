@@ -166,8 +166,8 @@ def slide_query(patch):
 
 def random_modif(patch, alpha=0.2, beta=0.2):
     x = np.random.uniform(low=-1, size=2)
-    patch["x"] = patch["x"] + patch["dx"]*alpha*x[0]
-    patch["y"] = patch["y"] + patch["dy"]*beta*x[1]
+    patch["x"] = int(patch["x"] + 224*alpha*x[0])
+    patch["y"] = int(patch["y"] + 224*beta*x[1])
     return patch
 
 

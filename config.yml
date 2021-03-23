@@ -1,5 +1,5 @@
 # goya config file for deep learning keras applications
-date: 2021-03-18
+date: 2021-03-23
 data:
   level: 0
   size: 224
@@ -16,7 +16,7 @@ training:
   workers: 16
   pretrain: null
   balanced: True
-  data_augmentation: False
+  data_augmentation: True
 experiment:
   folds: 1
   split: 0.20

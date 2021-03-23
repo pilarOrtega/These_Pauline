@@ -90,7 +90,7 @@ def create_custom_model(ModelClass, n_hidden, n_classes, psize):
     return Model(inputs=x, outputs=y)
 
 
-def write_experiment(filepath, task, archi, data_cfg, training_cfg, history):
+def write_experiment(filepath, task, archi, data_cfg, training_cfg, history, date):
     pretrain = training_cfg["pretrain"]
     level = data_cfg["level"]
     batch = training_cfg["batch"]
@@ -111,7 +111,8 @@ def write_experiment(filepath, task, archi, data_cfg, training_cfg, history):
         "Loss": [],
         "Lr": [],
         "Balanced": [],
-        "Data_augmentation": []
+        "Data_augmentation": [],
+        "Date": []
     }
     for run, keras_hist in history.items():
         for metric, values in keras_hist.history.items():
@@ -129,6 +130,7 @@ def write_experiment(filepath, task, archi, data_cfg, training_cfg, history):
                 df_dict["Lr"].append(lr)
                 df_dict["Balanced"].append(bal)
                 df_dict["Data_augmentation"].append(da)
+                df_dict["Date"].append(date)
     # put data into a dataframe
     df = pd.DataFrame()
     for name, vals in df_dict.items():
@@ -148,6 +150,7 @@ def main():
     proj_dir = args.projdir
     output_dir = args.output
 
+    date = cfg["date"]
     data_cfg = cfg["data"]
     training_cfg = cfg["training"]
     experiment_cfg = cfg["experiment"]
@@ -296,7 +299,7 @@ def main():
                 logger.info(classification_report(ytest, y_pred))
             outf = os.path.join(output_dir, "fit_output.csv")
             write_experiment(outf, task, name, data_cfg,
-                             training_cfg, run_history)
+                             training_cfg, run_history, date)
 
 
 if __name__ == "__main__":

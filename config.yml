@@ -8,6 +8,8 @@ data:
     - Task_1
     - Task_2
     - Task_3
+    - Task_4
+    - Task_5
 training:
   batch: 64
   epochs: 20

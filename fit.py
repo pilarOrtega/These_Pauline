@@ -145,6 +145,61 @@ def write_experiment(filepath, task, archi, data_cfg, training_cfg, history, dat
         df.to_csv(filepath, index=False)
 
 
+def write_results(filepath, task, archi, data_cfg, training_cfg, results, date):
+    pretrain = training_cfg["pretrain"]
+    level = data_cfg["level"]
+    batch = training_cfg["batch"]
+    loss = training_cfg["loss"]
+    lr = training_cfg["lr"]
+    bal = training_cfg["balanced"]
+    da = training_cfg['data_augmentation']
+    df_dict = {
+        "Slide": [],
+        "Task": [],
+        "Archi": [],
+        "Pretrain": [],
+        "Level": [],
+        "Run": [],
+        "Batch": [],
+        "Loss": [],
+        "Lr": [],
+        "Balanced": [],
+        "Data_augmentation": [],
+        "Date": [],
+        "X": [],
+        "Y": [],
+        "True": [],
+        "Predict": []
+    }
+    for p in results:
+        df_dict["Task"].append(task)
+        df_dict["Archi"].append(archi)
+        df_dict["Pretrain"].append(pretrain)
+        df_dict["Slide"].append(p['slide'])
+        df_dict["X"].append(p['x'])
+        df_dict["Y"].append(p['y'])
+        df_dict["True"].append(p['True'])
+        df_dict["Predict"].append(p['Prediction'])
+        df_dict["Level"].append(level)
+        df_dict["Run"].append(p['Run'])
+        df_dict["Batch"].append(batch)
+        df_dict["Loss"].append(loss)
+        df_dict["Lr"].append(lr)
+        df_dict["Balanced"].append(bal)
+        df_dict["Data_augmentation"].append(da)
+        df_dict["Date"].append(date)
+    # put data into a dataframe
+    df = pd.DataFrame()
+    for name, vals in df_dict.items():
+        df[name] = vals
+    if os.path.exists(filepath):
+        old_df = pd.read_csv(filepath)
+        new_df = pd.concat([old_df, df], ignore_index=True)
+        new_df.to_csv(filepath, index=False)
+    else:
+        df.to_csv(filepath, index=False)
+
+
 def main():
     with open(args.config, "r") as f:
         cfg = yaml.load(f, Loader=yaml.FullLoader)
@@ -223,6 +278,7 @@ def main():
             slides = [x['slide'] for x in patches]
             slides, indices = np.unique(slides, return_index=True)
             labels_slides = [x for x in labels[indices]]
+            results = []
             for train_indices, test_indices in splitter.split(slides, labels_slides):
                 train_slides, test_slides = slides[train_indices], slides[test_indices]
                 xtrain, xtest, ytrain, ytest = [], [], [], []
@@ -277,7 +333,6 @@ def main():
                     workers=training_cfg["workers"]
                 )
                 run_history[runs] = fit_history
-                runs += 1
 
                 # Confution Matrix and Classification Report
                 test_gen_p = data.DataGenerator(
@@ -297,11 +352,20 @@ def main():
                 y_pred = np.argmax(Y_pred, axis=1)
                 logger.info('Confusion Matrix')
                 logger.info(confusion_matrix(ytest, y_pred))
+                for i in range(len(xtest)):
+                    xtest[i]['True'] = ytest
+                    xtest[i]['Prediction'] = y_pred
+                    xtest[i]['Run'] = runs
+                results.append(xtest)
                 logger.info('Classification Report')
                 logger.info(classification_report(ytest, y_pred))
+                runs += 1
             outf = os.path.join(output_dir, "fit_output.csv")
             write_experiment(outf, task, name, data_cfg,
                              training_cfg, run_history, date)
+            outf = os.path.join(output_dir, f"results_{name}.csv")
+            write_results(outf, task, name, data_cfg,
+                          training_cfg, results, date)
 
 
 if __name__ == "__main__":

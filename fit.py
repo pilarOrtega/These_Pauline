@@ -56,15 +56,16 @@ def get_label_dict(labels):
 
 # Returns array of patches and array of numerical labels
 def get_whole_dataset(ptcs, tags):
-    label_dict = get_label_dict(tags)
     labels = []
     patches = []
     for t in range(len(tags)):
         tag = tags[t]
         patch = ptcs[t]
-        if tag in label_dict and tag != "NA":
-            labels.append(label_dict[tag])
+        if tag != "NA":
+            labels.append(tag)
             patches.append(patch)
+    label_dict = get_label_dict(labels)
+    labels = [label_dict[t] for t in labels]
     labels = np.array(labels)
     patches = np.array(patches)
     return patches, labels

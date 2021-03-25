@@ -58,10 +58,11 @@ def get_label_dict(labels):
 def get_whole_dataset(ptcs, tags):
     labels = []
     patches = []
+    unique_tags = np.unique(tags)
     for t in range(len(tags)):
         tag = tags[t]
         patch = ptcs[t]
-        if tag in np.unique(tags) and tag != "NA":
+        if tag in unique_tags and tag != "NA":
             labels.append(tag)
             patches.append(patch)
     label_dict = get_label_dict(labels)

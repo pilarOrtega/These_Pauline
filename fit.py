@@ -356,7 +356,7 @@ def main():
                     xtest[i]['True'] = ytest
                     xtest[i]['Prediction'] = y_pred
                     xtest[i]['Run'] = runs
-                results.append(xtest)
+                results.extend(xtest)
                 logger.info('Classification Report')
                 logger.info(classification_report(ytest, y_pred))
                 runs += 1

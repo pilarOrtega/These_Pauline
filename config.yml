@@ -5,9 +5,6 @@ data:
   size: 224
   channels: 3
   tasks:
-    - Task_1
-    - Task_2
-    - Task_3
     - Task_4
     - Task_5
 training:

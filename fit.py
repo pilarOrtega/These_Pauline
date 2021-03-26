@@ -353,8 +353,8 @@ def main():
                 logger.info('Confusion Matrix')
                 logger.info(confusion_matrix(ytest, y_pred))
                 for i in range(len(xtest)):
-                    xtest[i]['True'] = ytest
-                    xtest[i]['Prediction'] = y_pred
+                    xtest[i]['True'] = ytest[i]
+                    xtest[i]['Prediction'] = y_pred[i]
                     xtest[i]['Run'] = runs
                 results.extend(xtest)
                 logger.info('Classification Report')

@@ -8,8 +8,8 @@ data:
     - Task_4
     - Task_5
 training:
-  batch: 64
-  epochs: 20
+  batch: 16
+  epochs: 10
   lr: 0.0001
   loss: categorical_crossentropy
   workers: 16

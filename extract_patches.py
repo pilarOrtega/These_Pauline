@@ -83,6 +83,7 @@ parser.add_argument("--outdir", type=str,
 parser.add_argument("--extension", type=str,
                     help="extension of WSI")
 parser.add_argument("--verbose", type=int, default=2)
+parser.add_argument("--dir_filter", type=str, default='*')
 
 args = parser.parse_args()
 
@@ -114,6 +115,7 @@ def main():
     outdir = args.outdir
     ext = args.extension
     verbose = args.verbose
+    dir_filter = args.dir_filter
 
     logger.info("Processing slide folder {}".format(inputdir))
     logger.info("Processing from level {} to level 0".format(top))
@@ -129,7 +131,7 @@ def main():
     except FileExistsError:
         print("Directory", outdir, "already exists")
 
-    for folder in glob.glob(os.path.join(inputdir, "*")):
+    for folder in glob.glob(os.path.join(inputdir, dir_filter)):
         exit_folder = os.path.join(outdir, os.path.basename(folder))
         with warnings.catch_warnings(record=True) as ws:
             warnings.simplefilter("always")

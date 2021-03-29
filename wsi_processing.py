@@ -4,16 +4,15 @@ import os
 import argparse
 import logging
 import pandas as pd
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
+from tensorflow.keras.layers import Dense, Dropout, MaxPooling2D, Conv2D, Flatten
 from tensorflow.keras.backend import clear_session
-from tensorflow.keras import Model
+from tensorflow.keras.models import Sequential
 from sklearn.model_selection import StratifiedShuffleSplit
 from keras.optimizers import Adam
 import numpy as np
 import yaml
-from tensorflow.keras.layers import Input
 from sklearn.metrics import classification_report, confusion_matrix
-from fit import get_whole_dataset, create_custom_model, create_model
+from fit import get_whole_dataset, create_custom_model, create_model, write_experiment
 import tensorflow_probability as tfp
 
 tfd = tfp.distributions
@@ -53,33 +52,35 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 
 
-divergence_fn = lambda q,p,_:tfd.kl_divergence(q,p)/226214
-
-
-def create_bayesian_custom_model(ModelClass, n_hidden, n_classes, psize):
-    base_model = ModelClass()
-    x = Input(shape=(psize, psize, 3, ))
-    y = tfpl.Convolution2DReparameterization(filters=8, kernel_size=16, activation='relu',
-                                             kernel_prior_fn = tfpl.default_multivariate_normal_fn,
+def create_bayesian_custom_model(ModelClass, n_hidden, n_classes, psize, n):
+    divergence_fn = lambda q, p, _: tfd.kl_divergence(q,p)/226214
+    model_bayes = Sequential([
+        tfpl.Convolution2DReparameterization(input_shape=(75, 75, 3), filters=8, kernel_size=16, activation='relu',
+                                             kernel_prior_fn=tfpl.default_multivariate_normal_fn,
                                              kernel_posterior_fn=tfpl.default_mean_field_normal_fn(is_singular=False),
-                                             kernel_divergence_fn = divergence_fn,
-                                             bias_prior_fn = tfpl.default_multivariate_normal_fn,
+                                             kernel_divergence_fn=divergence_fn,
+                                             bias_prior_fn=tfpl.default_multivariate_normal_fn,
                                              bias_posterior_fn=tfpl.default_mean_field_normal_fn(is_singular=False),
-                                             bias_divergence_fn = divergence_fn)(x)
-    y = base_model(y)
-    y = GlobalAveragePooling2D()(y)
-    y = Dense(n_hidden, activation='relu')(y)
-    y = Dropout(0.5)(y)
-    y = tfpl.DenseReparameterization(units=tfpl.OneHotCategorical.params_size(n_classes), activation=None,
-                                     kernel_prior_fn = tfpl.default_multivariate_normal_fn,
+                                             bias_divergence_fn=divergence_fn),
+        MaxPooling2D(2, 2),
+        Conv2D(32, (3, 3), activation='relu'),
+        MaxPooling2D(2, 2),
+        Conv2D(64, (3, 3), activation='relu'),
+        MaxPooling2D(2, 2),
+        Conv2D(64, (3, 3), activation='relu'),
+        MaxPooling2D(2, 2),
+        Flatten(),
+        Dense(512, activation='relu'),
+        Dropout(0.2),
+        tfpl.DenseReparameterization(units=tfpl.OneHotCategorical.params_size(5), activation=None,
+                                     kernel_prior_fn=tfpl.default_multivariate_normal_fn,
                                      kernel_posterior_fn=tfpl.default_mean_field_normal_fn(is_singular=False),
-                                     kernel_divergence_fn = divergence_fn,
-                                     bias_prior_fn = tfpl.default_multivariate_normal_fn,
+                                     kernel_divergence_fn=divergence_fn,
+                                     bias_prior_fn=tfpl.default_multivariate_normal_fn,
                                      bias_posterior_fn=tfpl.default_mean_field_normal_fn(is_singular=False),
-                                     bias_divergence_fn = divergence_fn
-                                     )(y)
-    y = tfpl.OneHotCategorical(n_classes)(y)
-    return Model(inputs=x, outputs=y)
+                                     bias_divergence_fn=divergence_fn),
+        tfpl.OneHotCategorical(5)])
+    return model_bayes
 
 
 def main():
@@ -134,12 +135,17 @@ def main():
     clear_session()
     # create the model
     if "custom" in name:
-        model = create_bayesian_custom_model(
-            ModelClass,
-            archi_cfg["hidden"],
-            len(np.unique(labels)),
-            data_cfg["size"]
-        )
+        model_bayesian = create_bayesian_custom_model(
+                        ModelClass,
+                        archi_cfg["hidden"],
+                        len(np.unique(labels)),
+                        data_cfg["size"]
+                    )
+        model = create_model(ModelClass,
+                             archi_cfg["hidden"],
+                             len(np.unique(labels)),
+                             data_cfg["size"]
+                         )
     else:
         model = create_model(
             ModelClass,
@@ -199,7 +205,7 @@ def main():
             n_channels=data_cfg["channels"],
             n_classes=n_classes,
             shuffle=True,
-            balanced=training_cfg['balanced'],
+            balanced=False,
             data_augmentation=training_cfg['data_augmentation']
         )
         test_gen = data.DataGenerator(
@@ -220,6 +226,24 @@ def main():
         )
         run_history[runs] = fit_history
         model.save(os.path.join(output_dir, 'model_tumor_detect'))
+        outf = os.path.join(output_dir, "fit_output.csv")
+        write_experiment(outf, task, name, data_cfg,
+                         training_cfg, run_history, date)
+
+        name = 'customLenet_Bayesian'
+        fit_history = model_bayesian.fit(
+            train_gen,
+            validation_data=test_gen,
+            epochs=training_cfg["epochs"],
+            use_multiprocessing=True,
+            workers=training_cfg["workers"]
+        )
+        run_history[runs] = fit_history
+        model.save(os.path.join(output_dir, 'model_bayesian_tumor_detect'))
+
+        outf = os.path.join(output_dir, "fit_output.csv")
+        write_experiment(outf, task, name, data_cfg,
+                         training_cfg, run_history, date)
     # Predict patches with tumor
     # Create patch mask for patches of interest (heatmap)
     #

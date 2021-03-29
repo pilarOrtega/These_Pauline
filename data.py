@@ -123,6 +123,9 @@ def get_slide_file(slide_folder, slide_name, patch_folder=''):
 def handle_patch_file(patch_file, level, column):
     df = pd.read_csv(patch_file)
     level_df = df[df["level"] == level]
+    if column == 'Unlabeled':
+        for _, row in level_df.iterrows():
+            yield row["x"], row["y"], column, row["dx"], row["dy"]
     if column not in level_df:
         raise UnknownColumnError(
             "Column {} does not exists in {}!!!".format(column, patch_file)
@@ -279,6 +282,35 @@ class DataGenerator(keras.utils.Sequence):
 
         return self.preproc(X), keras.utils.to_categorical(y, num_classes=self.n_classes)
 
+
+def generator_generator(patches, labels):
+    def generator():
+        slide_list = [p["slide"] for p in patches]
+        slide_set = np.unique(slide_list)
+        slides = {s: OpenSlide(s) for s in slide_set}
+        for patch, label in zip(patches, labels):
+            slide = slides[patch["slide"]]
+            pil_img = slide.read_region(
+                (patch["x"], patch["y"]),
+                patch["level"],
+                patch["dimensions"]
+            )
+            x = np.array(pil_img)[:, :, 0:3]
+            yield x, label
+    return generator
+
+
+def create_dataset(patches, labels):
+    gen = generator_generator(patches, labels)
+    dataset = tf.data.Dataset.from_generator(
+        generator=gen,
+        output_types=(np.float32, np.int32),
+        output_shapes=((PATCH_SIZE, PATCH_SIZE, 3), labels[0].shape)
+    )
+    if PREFETCH is not None:
+        return dataset.batch(BATCH).prefetch(PREFETCH)
+    else:
+        return dataset.batch(BATCH)
 
 # Cell
 class StainAugmentor(a.ImageOnlyTransform):

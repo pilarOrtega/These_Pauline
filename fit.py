@@ -69,7 +69,7 @@ def get_whole_dataset(ptcs, tags):
     labels = [label_dict[t] for t in labels]
     labels = np.array(labels)
     patches = np.array(patches)
-    return patches, labels
+    return patches, labels, label_dict
 
 
 def create_model(ModelClass, n_hidden, n_classes, weights):
@@ -226,7 +226,7 @@ def main():
             (data_cfg["size"], data_cfg["size"]),
             task
         )
-        patches, labels = get_whole_dataset(ptcs, tags)
+        patches, labels, _ = get_whole_dataset(ptcs, tags)
         n_classes = len(np.unique(labels))
         logger.debug(
             "classes found for this task: {}".format(np.unique(labels)))

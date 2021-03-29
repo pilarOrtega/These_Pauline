@@ -52,8 +52,8 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 
 
-def create_bayesian_custom_model(ModelClass, n_hidden, n_classes, psize, n):
-    divergence_fn = lambda q, p, _: tfd.kl_divergence(q,p)/226214
+def create_bayesian_custom_model(ModelClass, n_hidden, n_classes, psize, n=226214):
+    divergence_fn = lambda q, p, _: tfd.kl_divergence(q,p)/n
     model_bayes = Sequential([
         tfpl.Convolution2DReparameterization(input_shape=(75, 75, 3), filters=8, kernel_size=16, activation='relu',
                                              kernel_prior_fn=tfpl.default_multivariate_normal_fn,

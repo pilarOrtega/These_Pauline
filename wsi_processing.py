@@ -141,11 +141,11 @@ def main():
                         len(np.unique(labels)),
                         data_cfg["size"]
                     )
-        model = create_model(ModelClass,
-                             archi_cfg["hidden"],
-                             len(np.unique(labels)),
-                             data_cfg["size"]
-                         )
+        model = create_custom_model(ModelClass,
+                                    archi_cfg["hidden"],
+                                    len(np.unique(labels)),
+                                    data_cfg["size"]
+                                    )
     else:
         model = create_model(
             ModelClass,

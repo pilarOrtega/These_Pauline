@@ -58,14 +58,15 @@ divergence_fn = lambda q,p,_:tfd.kl_divergence(q,p)/226214
 
 def create_bayesian_custom_model(ModelClass, n_hidden, n_classes, psize):
     base_model = ModelClass()
-    x = tfpl.Convolution2DReparameterization(input_shape=(psize, psize, 3, ), filters=8, kernel_size=16, activation='relu',
+    x = Input(shape=(psize, psize, 3, ))
+    y = tfpl.Convolution2DReparameterization(filters=8, kernel_size=16, activation='relu',
                                              kernel_prior_fn = tfpl.default_multivariate_normal_fn,
                                              kernel_posterior_fn=tfpl.default_mean_field_normal_fn(is_singular=False),
                                              kernel_divergence_fn = divergence_fn,
                                              bias_prior_fn = tfpl.default_multivariate_normal_fn,
                                              bias_posterior_fn=tfpl.default_mean_field_normal_fn(is_singular=False),
-                                             bias_divergence_fn = divergence_fn)
-    y = base_model(x)
+                                             bias_divergence_fn = divergence_fn)(x)
+    y = base_model(y)
     y = GlobalAveragePooling2D()(y)
     y = Dense(n_hidden, activation='relu')(y)
     y = Dropout(0.5)(y)

@@ -14,7 +14,6 @@ from typing import List, Optional, Any
 from numbers import Number
 from staintools.miscellaneous.get_concentrations import get_concentrations
 import albumentations as a
-from openslide import OpenSlide
 
 
 class Error(Exception):
@@ -126,13 +125,13 @@ def handle_patch_file(patch_file, level, column):
     level_df = df[df["level"] == level]
     if column == 'Unlabeled':
         for _, row in level_df.iterrows():
-            yield row["x"], row["y"], column, row["dx"], row["dy"]
+            yield row["x"], row["y"], column, row["dx"], row["dy"], row["id"]
     elif column not in level_df:
         raise UnknownColumnError(
             "Column {} does not exists in {}!!!".format(column, patch_file)
         )
     for _, row in level_df.iterrows():
-        yield row["x"], row["y"], row[column], row["dx"], row["dy"]
+        yield row["x"], row["y"], row[column], row["dx"], row["dy"], row["id"]
 
 
 class PathaiaHandler(object):
@@ -150,9 +149,9 @@ class PathaiaHandler(object):
                 patch_file = get_patch_csv_from_patch_folder(patch_folder)
                 slide_name = name.split('_')[2]
                 # read patch file and get the right level
-                for x, y, lab, dx, dy in handle_patch_file(patch_file, level, label):
+                for x, y, lab, dx, dy, id in handle_patch_file(patch_file, level, label):
                     patch_list.append(
-                        {"slide_path": slide_path, "slide": slide_name,
+                        {"slide_path": slide_path, "slide": slide_name, "id": id,
                          "x": x, "y": y, "level": level, "dimensions": dim, "dx": dx, "dy": dy}
                     )
                     labels.append(lab)
@@ -283,35 +282,6 @@ class DataGenerator(keras.utils.Sequence):
 
         return self.preproc(X), keras.utils.to_categorical(y, num_classes=self.n_classes)
 
-
-def generator_generator(patches, labels):
-    def generator():
-        slide_list = [p["slide"] for p in patches]
-        slide_set = np.unique(slide_list)
-        slides = {s: OpenSlide(s) for s in slide_set}
-        for patch, label in zip(patches, labels):
-            slide = slides[patch["slide"]]
-            pil_img = slide.read_region(
-                (patch["x"], patch["y"]),
-                patch["level"],
-                patch["dimensions"]
-            )
-            x = np.array(pil_img)[:, :, 0:3]
-            yield x, label
-    return generator
-
-
-def create_dataset(patches, labels, PATCH_SIZE=224, BATCH=16, PREFETCH=None):
-    gen = generator_generator(patches, labels)
-    dataset = tf.data.Dataset.from_generator(
-        generator=gen,
-        output_types=(np.float32, np.int32),
-        output_shapes=((PATCH_SIZE, PATCH_SIZE, 3), labels[0].shape)
-    )
-    if PREFETCH is not None:
-        return dataset.batch(BATCH).prefetch(PREFETCH)
-    else:
-        return dataset.batch(BATCH)
 
 # Cell
 class StainAugmentor(a.ImageOnlyTransform):

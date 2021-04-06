@@ -14,6 +14,7 @@ from typing import List, Optional, Any
 from numbers import Number
 from staintools.miscellaneous.get_concentrations import get_concentrations
 import albumentations as a
+from openslide import OpenSlide
 
 
 class Error(Exception):
@@ -126,7 +127,7 @@ def handle_patch_file(patch_file, level, column):
     if column == 'Unlabeled':
         for _, row in level_df.iterrows():
             yield row["x"], row["y"], column, row["dx"], row["dy"]
-    if column not in level_df:
+    elif column not in level_df:
         raise UnknownColumnError(
             "Column {} does not exists in {}!!!".format(column, patch_file)
         )
@@ -300,7 +301,7 @@ def generator_generator(patches, labels):
     return generator
 
 
-def create_dataset(patches, labels):
+def create_dataset(patches, labels, PATCH_SIZE=224, BATCH=16, PREFETCH=None):
     gen = generator_generator(patches, labels)
     dataset = tf.data.Dataset.from_generator(
         generator=gen,

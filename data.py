@@ -130,8 +130,9 @@ def handle_patch_file(patch_file, level, column):
         raise UnknownColumnError(
             "Column {} does not exists in {}!!!".format(column, patch_file)
         )
-    for _, row in level_df.iterrows():
-        yield row["x"], row["y"], row[column], row["dx"], row["dy"], row["id"]
+    else:
+        for _, row in level_df.iterrows():
+            yield row["x"], row["y"], row[column], row["dx"], row["dy"], row["id"]
 
 
 class PathaiaHandler(object):

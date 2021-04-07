@@ -108,8 +108,7 @@ def get_slide_file(slide_folder, project_folder, patch_folder):
         raise SlideNotFoundError(
             "Could not find a slide folder at: {}!!!".format(slide_folder)
         )
-    slide = patch_folder.strip(project_folder)
-    slide = os.path.join(slide_folder, slide)
+    slide = patch_folder.replace(project_folder, slide_folder)
     slide = slide + '.mrxs'
     if not os.path.exists(slide):
         raise SlideNotFoundError(

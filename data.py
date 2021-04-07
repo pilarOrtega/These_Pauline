@@ -94,30 +94,29 @@ def get_patch_folders_in_project(project_folder):
         raise EmptyProjectError(
             "Did not find any project at: {}".format(project_folder)
         )
-    for class_folder in glob(os.path.join(project_folder, '*')):
-        for name in os.listdir(class_folder):
-            patch_folder = os.path.join(class_folder, name)
-            if os.path.isdir(patch_folder):
-                yield name, patch_folder
+    for folder in glob(os.path.join(project_folder, '*')):
+        patch_file = os.path.join(folder, "patches.csv")
+        if os.path.exists(patch_file):
+            yield folder
+        else:
+            for f in get_patch_folders_in_project(folder):
+                yield f
 
 
-def get_slide_file(slide_folder, slide_name, patch_folder=''):
+def get_slide_file(slide_folder, project_folder, patch_folder):
     if not os.path.isdir(slide_folder):
         raise SlideNotFoundError(
             "Could not find a slide folder at: {}!!!".format(slide_folder)
         )
-    if patch_folder != '':
-        category = os.path.basename(os.path.dirname(patch_folder))
-        slide_folder = os.path.join(slide_folder, category)
-    for name in os.listdir(slide_folder):
-        if name.endswith(".mrxs") and not name.startswith("."):
-            base, _ = os.path.splitext(name)
-            if slide_name == base:
-                return os.path.join(slide_folder, name)
-    raise SlideNotFoundError(
-        "Could not find an mrxs slide file for: {} in {}!!!".format(slide_name,
-                                                                    slide_folder)
-    )
+    slide = patch_folder.strip(project_folder)
+    slide = os.path.join(slide_folder, slide)
+    slide = slide + '.mrxs'
+    if not os.path.exists(slide):
+        raise SlideNotFoundError(
+            "Could not find an mrxs slide file for: {} in {}!!!".format(slide,
+                                                                        slide_folder)
+        )
+    return slide
 
 
 def handle_patch_file(patch_file, level, column):
@@ -144,11 +143,11 @@ class PathaiaHandler(object):
     def list_patches(self, level, dim, label):
         patch_list = []
         labels = []
-        for name, patch_folder in get_patch_folders_in_project(self.project_folder):
+        for folder in get_patch_folders_in_project(self.project_folder):
             try:
-                slide_path = get_slide_file(self.slide_folder, name, patch_folder)
-                patch_file = get_patch_csv_from_patch_folder(patch_folder)
-                slide_name = name.split('_')[2]
+                slide_path = get_slide_file(self.slide_folder, self.project_folder, folder)
+                patch_file = get_patch_csv_from_patch_folder(folder)
+                slide_name = os.path.basename(folder).split('_')[2]
                 # read patch file and get the right level
                 for x, y, lab, dx, dy, id in handle_patch_file(patch_file, level, label):
                     patch_list.append(

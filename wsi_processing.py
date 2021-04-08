@@ -15,6 +15,8 @@ parser.add_argument("--projdir", type=str,
                     help="pathaia dataset directory.")
 parser.add_argument("--model", type=str,
                     help="trained model to load.")
+parser.add_argument("-l", "--level", type=int,
+                    default=0)
 parser.add_argument("--device", default="0", type=str,
                     help="ID of the device to use for computation.")
 
@@ -29,7 +31,7 @@ def main():
     proj_dir = args.projdir
 
     handler = data.PathaiaHandler(proj_dir, slide_dir)
-    ptcs, tags = handler.list_patches(0, (224, 224), label='Unlabeled')
+    ptcs, tags = handler.list_patches(args.level, (224, 224), label='Unlabeled')
     ptcs, tags, _ = get_whole_dataset(ptcs, tags)
     preproc = xception.preprocess_input
 

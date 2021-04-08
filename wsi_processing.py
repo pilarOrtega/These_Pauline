@@ -61,3 +61,7 @@ def main():
             patches.loc[ptcs[i]['id']]['Result_0'] = ptcs[i]['Result_0']
             patches.loc[ptcs[i]['id']]['Result_1'] = ptcs[i]['Result_1']
         patches.to_csv(patches_csv)
+
+
+if __name__ == "__main__":
+    main()

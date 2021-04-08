@@ -13,10 +13,8 @@ parser.add_argument("--slidedir", type=str,
                     help="slide dataset directory.")
 parser.add_argument("--projdir", type=str,
                     help="pathaia dataset directory.")
-parser.add_argument("--output", type=str,
-                    help="path to output folder.")
-parser.add_argument_group("--model", type=str,
-                          help="trained model to load.")
+parser.add_argument("--model", type=str,
+                    help="trained model to load.")
 parser.add_argument("--device", default="0", type=str,
                     help="ID of the device to use for computation.")
 

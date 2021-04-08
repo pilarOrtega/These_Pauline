@@ -57,8 +57,8 @@ def main():
         slidename = os.path.basename(ptc_folder).split('_')[2]
         indeces = [i for i, x in enumerate(slide_list) if x == slidename]
         for i in indeces:
-            patches.loc[ptcs[i]['id']]['Result_0'] = ptcs[i]['Result_0']
-            patches.loc[ptcs[i]['id']]['Result_1'] = ptcs[i]['Result_1']
+            patches.loc[ptcs[i]['id'], 'Result_0'] = ptcs[i]['Result_0']
+            patches.loc[ptcs[i]['id'], 'Result_1'] = ptcs[i]['Result_1']
         patches.to_csv(patches_csv)
 
 

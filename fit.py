@@ -13,6 +13,7 @@ import numpy as np
 import yaml
 from tensorflow.keras.layers import Input
 from sklearn.metrics import classification_report, confusion_matrix
+from auxiliary_functions import get_whole_dataset
 
 
 logger = logging.getLogger(__name__)
@@ -46,30 +47,6 @@ args = parser.parse_args()
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = args.device
-
-
-# Transforms labels to numerical value
-def get_label_dict(labels):
-    outcomes = np.unique(labels)
-    return {v: k for k, v in enumerate(outcomes)}
-
-
-# Returns array of patches and array of numerical labels
-def get_whole_dataset(ptcs, tags):
-    labels = []
-    patches = []
-    unique_tags = np.unique(tags)
-    for t in range(len(tags)):
-        tag = tags[t]
-        patch = ptcs[t]
-        if tag in unique_tags and tag != "NA":
-            labels.append(tag)
-            patches.append(patch)
-    label_dict = get_label_dict(labels)
-    labels = [label_dict[t] for t in labels]
-    labels = np.array(labels)
-    patches = np.array(patches)
-    return patches, labels, label_dict
 
 
 def create_model(ModelClass, n_hidden, n_classes, weights):

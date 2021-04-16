@@ -6,6 +6,7 @@ import pandas as pd
 from tensorflow.keras.applications import xception
 from auxiliary_functions import get_whole_dataset
 from tensorflow.keras.models import load_model
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 
@@ -50,13 +51,14 @@ def main():
         ptcs[i]['Result_1'] = Y_pred[i][1]
 
     slide_list = [p['slide'] for p in ptcs]
-    for ptc_folder in data.get_patch_folders_in_project(proj_dir):
+    for ptc_folder in tqdm(data.get_patch_folders_in_project(proj_dir)):
+        print(f'Get patches from {ptc_folder}')
         patches_csv = data.get_patch_csv_from_patch_folder(ptc_folder)
         patches = pd.read_csv(patches_csv, sep=None, engine='python')
         patches = patches.set_index('id')
         slidename = os.path.basename(ptc_folder).split('_')[2]
         indeces = [i for i, x in enumerate(slide_list) if x == slidename]
-        for i in indeces:
+        for i in tqdm(indeces):
             patches.loc[ptcs[i]['id'], 'Result_0'] = ptcs[i]['Result_0']
             patches.loc[ptcs[i]['id'], 'Result_1'] = ptcs[i]['Result_1']
         patches.to_csv(patches_csv)

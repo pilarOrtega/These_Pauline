@@ -14,6 +14,7 @@ from typing import List, Optional, Any
 from numbers import Number
 from staintools.miscellaneous.get_concentrations import get_concentrations
 import albumentations as a
+from tqdm import tqdm
 
 
 class Error(Exception):
@@ -373,7 +374,7 @@ class StainAugmentor(a.ImageOnlyTransform):
 def generator_fn(patch_list, label_list, preproc):
 
     def generator():
-        for patch, y in zip(patch_list, label_list):
+        for patch, y in tqdm(zip(patch_list, label_list)):
             x = slide_query(patch)
             yield preproc(x), y
     return generator

@@ -1,11 +1,14 @@
 # goya config file for deep learning keras applications
-date: 2021-03-23
+date: 2021-04-22
 data:
-  level: 1
+  level: 0
   size: 224
   channels: 3
   tasks:
-    - Task_5
+    - Task_1
+    - Task_2
+    - Task_3
+    - Task_4
 training:
   batch: 16
   epochs: 20

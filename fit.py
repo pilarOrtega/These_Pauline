@@ -8,7 +8,7 @@ from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.backend import clear_session
 from tensorflow.keras import Model
 from sklearn.model_selection import StratifiedShuffleSplit
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 import numpy as np
 import yaml
 from tensorflow.keras.layers import Input
@@ -238,7 +238,7 @@ def main():
                     weights=training_cfg["pretrain"]
                 )
             # create the optimizer
-            opt = Adam(learning_rate=training_cfg["lr"])
+            opt = SGD(learning_rate=training_cfg["lr"])
             # compile model with optimizer
             model.compile(
                 optimizer=opt,

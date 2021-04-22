@@ -53,7 +53,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 def create_bayesian_custom_model(ModelClass, n_hidden, n_classes, psize, n=226214):
     divergence_fn = lambda q, p, _: tfd.kl_divergence(q,p)/n
     model_bayes = Sequential([
-        tfpl.Convolution2DReparameterization(input_shape=(75, 75, 3), filters=8, kernel_size=16, activation='relu',
+        tfpl.Convolution2DReparameterization(input_shape=(psize, psize, 3), filters=32, kernel_size=16, activation='relu',
                                              kernel_prior_fn=tfpl.default_multivariate_normal_fn,
                                              kernel_posterior_fn=tfpl.default_mean_field_normal_fn(is_singular=False),
                                              kernel_divergence_fn=divergence_fn,
@@ -70,15 +70,19 @@ def create_bayesian_custom_model(ModelClass, n_hidden, n_classes, psize, n=22621
         Flatten(),
         Dense(512, activation='relu'),
         Dropout(0.2),
-        tfpl.DenseReparameterization(units=tfpl.OneHotCategorical.params_size(5), activation=None,
+        tfpl.DenseReparameterization(units=tfpl.OneHotCategorical.params_size(n_classes), activation=None,
                                      kernel_prior_fn=tfpl.default_multivariate_normal_fn,
                                      kernel_posterior_fn=tfpl.default_mean_field_normal_fn(is_singular=False),
                                      kernel_divergence_fn=divergence_fn,
                                      bias_prior_fn=tfpl.default_multivariate_normal_fn,
                                      bias_posterior_fn=tfpl.default_mean_field_normal_fn(is_singular=False),
                                      bias_divergence_fn=divergence_fn),
-        tfpl.OneHotCategorical(5)])
+        tfpl.OneHotCategorical(n_classes)])
     return model_bayes
+
+
+def negative_log_likelihood(y_true, y_pred):
+    return -y_pred.log_prob(y_true)
 
 
 def main():
@@ -133,12 +137,12 @@ def main():
     clear_session()
     # create the model
     if "custom" in name:
-        # model_bayesian = create_bayesian_custom_model(
-        #                 ModelClass,
-        #                 archi_cfg["hidden"],
-        #                 len(np.unique(labels)),
-        #                 data_cfg["size"]
-        #             )
+        model_bayesian = create_bayesian_custom_model(
+                        ModelClass,
+                        archi_cfg["hidden"],
+                        len(np.unique(labels)),
+                        data_cfg["size"]
+                    )
         model = create_custom_model(ModelClass,
                                     archi_cfg["hidden"],
                                     len(np.unique(labels)),
@@ -159,6 +163,19 @@ def main():
         loss=training_cfg["loss"],
         metrics=["accuracy"]
     )
+
+    # compile model with optimizer
+    #     model.compile(
+    #         optimizer=opt,
+    #         loss=training_cfg["loss"],
+    #         metrics=["accuracy"]
+    #     )
+
+    model_bayesian.compile(loss = negative_log_likelihood,
+                           optimizer = opt,
+                           metrics = ['accuracy'],
+                           experimental_run_tf_function = False)
+
     logger.info(
         "Running {} fit-test procedures".format(
             experiment_cfg["folds"])
@@ -228,23 +245,20 @@ def main():
         write_experiment(outf, task, name, data_cfg,
                          training_cfg, run_history, date)
 
-        # name = 'customLenet_Bayesian'
-        # fit_history = model_bayesian.fit(
-        #     train_gen,
-        #     validation_data=test_gen,
-        #     epochs=training_cfg["epochs"],
-        #     use_multiprocessing=True,
-        #     workers=training_cfg["workers"]
-        # )
-        # run_history[runs] = fit_history
-        # model.save(os.path.join(output_dir, 'model_bayesian_tumor_detect'))
-        #
-        # outf = os.path.join(output_dir, "fit_output.csv")
-        # write_experiment(outf, task, name, data_cfg,
-        #                  training_cfg, run_history, date)
-    # Predict patches with tumor
-    # Create patch mask for patches of interest (heatmap)
-    #
+        name = 'customLenet_Bayesian'
+        fit_history = model_bayesian.fit(
+            train_gen,
+            validation_data=test_gen,
+            epochs=training_cfg["epochs"],
+            use_multiprocessing=True,
+            workers=training_cfg["workers"]
+        )
+        run_history[runs] = fit_history
+        model_bayesian.save(os.path.join(output_dir, 'model_bayesian_tumor_detect'))
+
+        outf = os.path.join(output_dir, "fit_output.csv")
+        write_experiment(outf, task, name, data_cfg,
+                         training_cfg, run_history, date)
 
 
 if __name__ == "__main__":

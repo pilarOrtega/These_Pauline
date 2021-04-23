@@ -76,6 +76,8 @@ parser.add_argument("--slides", type=str,
                     help="WSI dataset directory.")
 parser.add_argument("--top", type=int,
                     help="top level of patch extraction.")
+parser.add_argument("--low", type=int, default=0,
+                    help='low level for patch extraction')
 parser.add_argument("--psize", type=int,
                     help="size of patches.")
 parser.add_argument("--outdir", type=str,
@@ -111,6 +113,7 @@ def has_tissue(img):
 def main():
     inputdir = args.slides
     top = args.top
+    low = args.low
     psize = args.psize
     outdir = args.outdir
     ext = args.extension
@@ -135,7 +138,7 @@ def main():
         exit_folder = os.path.join(outdir, os.path.basename(folder))
         with warnings.catch_warnings(record=True) as ws:
             warnings.simplefilter("always")
-            patchify_folder_hierarchically(folder, exit_folder, top, 0, psize, {
+            patchify_folder_hierarchically(folder, exit_folder, top, low, psize, {
                                            'x': psize, 'y': psize}, filters=filters, silent=silent, extensions=(ext, ), verbose=verbose)
         for w in ws:
             logger.warning(w.message)

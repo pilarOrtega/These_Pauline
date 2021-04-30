@@ -1,5 +1,5 @@
 # goya config file for deep learning keras applications
-date: 2021-04-22
+date: 2021-04-30
 data:
   level: 0
   size: 224

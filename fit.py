@@ -1,4 +1,5 @@
 import data
+import pathaia.util.management as util
 from models import models_CNN
 import os
 import argparse
@@ -197,16 +198,19 @@ def main():
         f"Conf experiments - folds: {experiment_cfg['folds']}, split: {experiment_cfg['split']}")
     for task in data_cfg["tasks"]:
         logger.info("Prediction of task: '{}'".format(task))
-        handler = data.PathaiaHandler(proj_dir, slide_dir)
+        handler = util.PathaiaHandler(proj_dir, slide_dir)
         ptcs, tags = handler.list_patches(
             data_cfg["level"],
             (data_cfg["size"], data_cfg["size"]),
             task
         )
-        patches, labels, _ = get_whole_dataset(ptcs, tags)
+        patches, labels, labels_dict = get_whole_dataset(ptcs, tags)
         n_classes = len(np.unique(labels))
         logger.debug(
             "classes found for this task: {}".format(np.unique(labels)))
+        logger.debug(
+            "classes: {}".format(labels_dict)
+        )
         logger.debug("counts: {}".format(
             np.unique(labels, return_counts=True)))
         splitter = StratifiedShuffleSplit(
@@ -238,7 +242,7 @@ def main():
                     weights=training_cfg["pretrain"]
                 )
             # create the optimizer
-            opt = SGD(learning_rate=training_cfg["lr"])
+            opt = Adam(learning_rate=training_cfg["lr"])
             # compile model with optimizer
             model.compile(
                 optimizer=opt,
@@ -252,7 +256,9 @@ def main():
             run_history = dict()
             runs = 1
             # train and validate the model
-            slides = [x['slide'] for x in patches]
+            slides = [x['slide_name'] for x in patches]
+            # get name slide
+            slides = [s.split('_')[2] for s in slides]
             slides, indices = np.unique(slides, return_index=True)
             labels_slides = [x for x in labels[indices]]
             results = []
@@ -260,10 +266,10 @@ def main():
                 train_slides, test_slides = slides[train_indices], slides[test_indices]
                 xtrain, xtest, ytrain, ytest = [], [], [], []
                 for i in range(len(patches)):
-                    if patches[i]['slide'] in train_slides:
+                    if patches[i]['slide_name'].split('_')[2] in train_slides:
                         xtrain.append(patches[i])
                         ytrain.append(labels[i])
-                    elif patches[i]['slide'] in test_slides:
+                    elif patches[i]['slide_name'].split('_')[2] in test_slides:
                         xtest.append(patches[i])
                         ytest.append(labels[i])
                     else:

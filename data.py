@@ -160,10 +160,30 @@ class PathaiaHandler(object):
         return patch_list, labels
 
 
-def slide_query(patch):
-    slide = openslide.OpenSlide(patch["slide_path"])
-    pil_img = slide.read_region((patch["x"], patch["y"]),
-                                patch["level"], patch["dimensions"])
+    # def slide_query(patch):
+    # slide = openslide.OpenSlide(patch["slide_path"])
+    # pil_img = slide.read_region((patch["x"], patch["y"]),
+    #                             patch["level"], patch["dimensions"])
+    # return np.array(pil_img)[:, :, 0:3]
+
+def slide_query(patch, dim):
+    """
+    Query patch image in slide.
+
+    Get patch image given position, level and dimensions.
+
+    Args:
+        patch: the patch to query.
+        dim: dimensions of the patches in pixels.
+
+    Returns:
+        Numpy array rgb image of the patch.
+
+    """
+    slide = openslide.OpenSlide(patch["slide"])
+    pil_img = slide.read_region(
+        (patch["x"], patch["y"]), patch["level"], dim
+    )
     return np.array(pil_img)[:, :, 0:3]
 
 
@@ -275,7 +295,7 @@ class DataGenerator(keras.utils.Sequence):
             patch = self.list_IDs[ID]
             if self.data_augmentation:
                 patch = random_modif(patch)
-            X[i, ] = slide_query(patch)
+            X[i, ] = slide_query(patch, self.dim)
 
             # Store class
             y[i] = self.labels[ID]

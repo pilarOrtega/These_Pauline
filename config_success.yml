@@ -1,8 +1,8 @@
 date: 2021-05-03
 input:
   patches: '/data/Projet_Pauline/results_ResNet50.csv'
-  output_dir:
-  date:
+  output_dir: '/data/Projet_Pauline/'
+  date: 2021-04-30
 data:
   level: 0
   size: 224

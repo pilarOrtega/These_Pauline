@@ -48,7 +48,7 @@ def list_patch(df, task):
         yield {
             "x": row["X"],
             "y": row["Y"],
-            "level": row["level"],
+            "level": row["Level"],
             "slide_path": row["Slide"],
             "slide_name": os.path.basename(row["Slide"])
         }, row["Success"]

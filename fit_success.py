@@ -60,14 +60,15 @@ def main():
 
     date = cfg["date"]
     data_cfg = cfg["data"]
+    input = cfg["input"]
     training_cfg = cfg["training"]
     experiment_cfg = cfg["experiment"]
     archi_cfg = cfg["architecture"]
 
-    patches_csv = data_cfg['patches']
+    patches_csv = input['patches']
     tasks = data_cfg['tasks']
-    output_dir = data_cfg['output_dir']
-    exp_date = data_cfg['date']
+    output_dir = input['output_dir']
+    exp_date = input['date']
 
     patches_csv = pd.read_csv(patches_csv, sep=None, engine='python')
     patches_csv = patches_csv[patches_csv['Date'] == exp_date]
@@ -213,3 +214,7 @@ def main():
             outf = os.path.join(output_dir, f"results_success_{name}.csv")
             fit.write_results(outf, task, name, data_cfg,
                               training_cfg, results, date)
+
+
+if __name__ == "__main__":
+    main()

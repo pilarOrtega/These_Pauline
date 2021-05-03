@@ -1,0 +1,29 @@
+date: 2021-05-03
+input:
+  patches: '/data/Projet_Pauline/results_ResNet50.csv'
+  output_dir:
+  date:
+data:
+  level: 0
+  size: 224
+  channels: 3
+  tasks:
+    - Task_1
+    - Task_2
+    - Task_3
+    - Task_4
+training:
+  batch: 16
+  epochs: 3
+  lr: 0.0001
+  loss: categorical_crossentropy
+  workers: 16
+  pretrain: null
+  balanced: False
+  data_augmentation: False
+experiment:
+  folds: 1
+  split: 0.20
+  seed: 42
+architecture:
+  hidden: 128

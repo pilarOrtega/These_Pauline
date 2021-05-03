@@ -44,14 +44,16 @@ os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 
 def list_patch(df, task):
     df = df[df['Task'] == task]
+    ptcs, labels = [], []
     for _, row in df.iterrows():
-        yield {
-            "x": row["X"],
-            "y": row["Y"],
-            "level": row["Level"],
-            "slide_path": row["Slide"],
-            "slide_name": os.path.basename(row["Slide"])
-        }, row["Success"]
+        patch = {"x": row["X"],
+                 "y": row["Y"],
+                 "level": row["Level"],
+                 "slide_path": row["Slide"],
+                 "slide_name": os.path.basename(row["Slide"])}
+        ptcs.append(patch)
+        labels.append(row["Success"])
+    return ptcs, labels
 
 
 def main():

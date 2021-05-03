@@ -50,6 +50,7 @@ def list_patch(df, task):
                  "y": row["Y"],
                  "level": row["Level"],
                  "slide_path": row["Slide"],
+                 "slide": row["Slide"],
                  "slide_name": os.path.basename(row["Slide"])}
         ptcs.append(patch)
         labels.append(row["Success"])

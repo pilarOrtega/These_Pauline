@@ -26,7 +26,7 @@ def main():
         except RuntimeError as e:
             print(e)
 
-    proj_dir = args.patches
+    proj_dir = args.proj_dir
     slide_dir = args.slide_dir
     level = args.level
     patch_size = args.patch_size

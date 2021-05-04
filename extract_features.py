@@ -34,7 +34,7 @@ def main():
     layer = args.layer
 
     handler = util.PathaiaHandler(proj_dir, slide_dir)
-    handler.extract_features(model=model, patch_size=patch_size, level=level,
+    handler.extract_features(model_name=model, patch_size=patch_size, level=level,
                              layer=layer)
 
 

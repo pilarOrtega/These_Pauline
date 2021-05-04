@@ -11,7 +11,7 @@ def main():
     parser.add_argument('--patch_size', type=int, default=224)
     parser.add_argument('--model', type=str, default='ResNet50')
     parser.add_argument('--layer', type=str, default='')
-    parser.add_argument('--outdir', type=str, default='')
+    parser.add_argument('--level', type=int, default=None)
     parser.add_argument('--device', default="0")
     args = parser.parse_args()
 

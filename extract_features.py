@@ -1,7 +1,7 @@
 import os
 import argparse
 import tensorflow as tf
-from pathaia.util.management import util
+import pathaia.util.management as util
 
 
 def main():

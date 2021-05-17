@@ -70,7 +70,7 @@ def balanced_set(patches, labels, patch_array, replacement=True):
     for x in balanced_patches:
         patches_mod.append(patches[x])
         labels_mod.append(labels[x])
-    patch_array = patch_array[balanced_patches, :]
+    patch_array = patch_array[balanced_patches]
     return patches_mod, labels_mod, patch_array
 
 

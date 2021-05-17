@@ -79,7 +79,7 @@ def main():
     slide_dir = args.slidedir
     method = 'ResNet50'
     tasks = args.tasks
-    levels = args.levels
+    levels = int(args.levels)
     outdir = args.outdir
     handler = util.PathaiaHandler(proj_dir, slide_dir)
 

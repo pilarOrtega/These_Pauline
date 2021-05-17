@@ -20,7 +20,7 @@ parser.add_argument("--projdir", type=str,
 parser.add_argument("--outdir", type=str)
 parser.add_argument("--tasks", nargs='+',
                     help="Tasks to analyze")
-parser.add_argument("--levels", nargs='+', type=str,
+parser.add_argument("--levels", nargs='+', type=int,
                     help="Levels to analyze")
 parser.add_argument("--device", default="0", type=str,
                     help="ID of the device to use for computation.")
@@ -79,12 +79,13 @@ def main():
     slide_dir = args.slidedir
     method = 'ResNet50'
     tasks = args.tasks
-    levels = int(args.levels)
+    levels = args.levels
     outdir = args.outdir
     handler = util.PathaiaHandler(proj_dir, slide_dir)
 
     for t in tasks:
         for level in levels:
+            level = int(level)
             file = f'/data/Projet_Pauline/{t}_level{level}.npy'
             if os.path.exists(file):
                 patch_array = np.load(file)

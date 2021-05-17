@@ -87,17 +87,17 @@ def main():
         for level in levels:
             level = int(level)
             file = f'/data/Projet_Pauline/{t}_level{level}.npy'
+            patches, labels = handler.list_patches(level=level, dim=(224, 224), column=t)
+            if t in ['Task_1', 'Task_2', 'Task_3']:
+                labels = ['NR' if v == 'NR' else 'R' if v == 'R' else 'NA' for v in labels]
+            elif t in ['Task_5']:
+                labels = ['T' if v == 'T' else 'N' if v == 'N' else 'NA' for v in labels]
+            patches, labels, labels_dict = get_whole_dataset(patches, labels)
             if os.path.exists(file):
                 patch_array = np.load(file)
                 print(f'Loaded file {file}')
             else:
                 print(f'Extracting {t} from level {level}')
-                patches, labels = handler.list_patches(level=level, dim=(224, 224), column=t)
-                if t in ['Task_1', 'Task_2', 'Task_3']:
-                    labels = ['NR' if v == 'NR' else 'R' if v == 'R' else 'NA' for v in labels]
-                elif t in ['Task_5']:
-                    labels = ['T' if v == 'T' else 'N' if v == 'N' else 'NA' for v in labels]
-                patches, labels, labels_dict = get_whole_dataset(patches, labels)
                 patch_array = np.zeros((len(patches), 512))
                 x = 0
                 for patch in tqdm(patches):
@@ -111,9 +111,6 @@ def main():
                         patch_array[x, y] = features[f'{y}']
                     x += 1
                 np.save(f'/data/Projet_Pauline/{t}_level{level}.npy', patch_array)
-            patches, labels = handler.list_patches(level=level, dim=(224, 224), column=t)
-            labels = ['NR' if v == 'NR' else 'R' if v == 'R' else 'NA' for v in labels]
-            patches, labels, labels_dict = get_whole_dataset(patches, labels)
             splitter = StratifiedShuffleSplit(
                 n_splits=5,
                 test_size=0.2,

@@ -8,6 +8,15 @@ import numpy
 from sklearn.svm import LinearSVC
 from sklearn.metrics import classification_report
 from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.gaussian_process.kernels import RBF
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 import argparse
 
 
@@ -84,6 +93,22 @@ def main():
     outdir = args.outdir
     handler = util.PathaiaHandler(proj_dir, slide_dir)
 
+    names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
+             "Decision Tree", "Random Forest", "Neural Net", "AdaBoost",
+             "Naive Bayes", "QDA"]
+
+    classifiers = [
+        KNeighborsClassifier(3),
+        SVC(kernel="linear", C=0.025),
+        SVC(gamma=2, C=1),
+        GaussianProcessClassifier(1.0 * RBF(1.0)),
+        DecisionTreeClassifier(max_depth=5),
+        RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
+        MLPClassifier(alpha=1, max_iter=1000),
+        AdaBoostClassifier(),
+        GaussianNB(),
+        QuadraticDiscriminantAnalysis()]
+
     for t in tasks:
         for level in levels:
             level = int(level)
@@ -112,11 +137,6 @@ def main():
                         patch_array[x, y] = features[f'{y}']
                     x += 1
                 np.save(f'/data/Projet_Pauline/{t}_level{level}.npy', patch_array)
-            splitter = StratifiedShuffleSplit(
-                n_splits=5,
-                test_size=0.2,
-                random_state=42
-            )
             # train and validate the model
             slides = [x['slide_name'] for x in patches]
             # get name slide
@@ -124,9 +144,6 @@ def main():
             slides, indices = np.unique(slides, return_index=True)
             labels_slides = [x for x in labels[indices]]
             labels_slides = np.asarray(labels_slides)
-            scores = []
-            model = LinearSVC(max_iter=100000)
-            fold = 0
             df = pd.DataFrame([], columns=['Slide',
                                            'Method',
                                            'Task',
@@ -135,52 +152,61 @@ def main():
                                            'Fold',
                                            'Predict_0',
                                            'Predict_1'])
-            for train_indices, test_indices in splitter.split(slides, labels_slides):
-                train_slides, test_slides = slides[train_indices], slides[test_indices]
-                train_labels, test_labels = labels_slides[train_indices], labels_slides[test_indices]
-                xtrain, xtest, ytrain, ytest, train_patches, test_patches = [], [], [], [], [], []
-                for i in range(len(patches)):
-                    if patches[i]['slide_name'].split('_')[2] in train_slides:
-                        xtrain.append(patch_array[i, :])
-                        ytrain.append(labels[i])
-                        train_patches.append(patches[i])
-                    elif patches[i]['slide_name'].split('_')[2] in test_slides:
-                        xtest.append(patch_array[i, :])
-                        ytest.append(labels[i])
-                        test_patches.append(patches[i])
-                print('Balance set...')
-                train_patches, ytrain, xtrain = balanced_set(train_patches, ytrain, xtrain)
-                print(f'Rebalanced: {np.unique(ytrain, return_counts=True)}')
-                print('Start fitting...')
-                model.fit(xtrain, ytrain)
-                score = model.score(xtest, ytest)
-                scores.append(score)
-                predictions = model.predict(xtest)
-                print('Accuracy for fold {}: {}'.format(i, score))
-                table = classification_report(
-                    ytest, predictions, target_names=list(labels_dict.keys()))
-                print(table)
-                with open(os.path.join(outdir, f'cross_validation_{t}_level{level}_fold{fold}.txt'), 'w') as f:
-                    f.write(table)
-                fold += 1
-                for x in range(len(test_slides)):
-                    slide, label = test_slides[x], test_labels[x]
-                    results = []
-                    for i in range(len(test_patches)):
-                        if test_patches[i]['slide_name'].split('_')[2] == slide:
-                            results.append(predictions[i])
-                    predict_0 = results.count(0)
-                    predict_1 = results.count(1)
-                    df = df.append({'Slide': slide,
-                                    'Method': "Features + SVM",
-                                    'Task': t,
-                                    'Level': level,
-                                    'True': label,
-                                    'Fold': fold,
-                                    'Predict_0': predict_0,
-                                    'Predict_1': predict_1}, ignore_index=True)
+            for name, model in zip(names, classifiers):
+                print(f'Evaluating classifier {name}')
+                splitter = StratifiedShuffleSplit(
+                    n_splits=5,
+                    test_size=0.2,
+                    random_state=42
+                )
+                fold = 0
+                scores = []
+                for train_indices, test_indices in splitter.split(slides, labels_slides):
+                    train_slides, test_slides = slides[train_indices], slides[test_indices]
+                    train_labels, test_labels = labels_slides[train_indices], labels_slides[test_indices]
+                    xtrain, xtest, ytrain, ytest, train_patches, test_patches = [], [], [], [], [], []
+                    for i in range(len(patches)):
+                        if patches[i]['slide_name'].split('_')[2] in train_slides:
+                            xtrain.append(patch_array[i, :])
+                            ytrain.append(labels[i])
+                            train_patches.append(patches[i])
+                        elif patches[i]['slide_name'].split('_')[2] in test_slides:
+                            xtest.append(patch_array[i, :])
+                            ytest.append(labels[i])
+                            test_patches.append(patches[i])
+                    print('Balance set...')
+                    train_patches, ytrain, xtrain = balanced_set(train_patches, ytrain, xtrain)
+                    print(f'Rebalanced: {np.unique(ytrain, return_counts=True)}')
+                    print('Start fitting...')
+                    model.fit(xtrain, ytrain)
+                    score = model.score(xtest, ytest)
+                    scores.append(score)
+                    predictions = model.predict(xtest)
+                    print('Accuracy for fold {}: {}'.format(i, score))
+                    table = classification_report(
+                        ytest, predictions, target_names=list(labels_dict.keys()))
+                    print(table)
+                    with open(os.path.join(outdir, f'{name}_{t}_level{level}_fold{fold}.txt'), 'w') as f:
+                        f.write(table)
+                    fold += 1
+                    for x in range(len(test_slides)):
+                        slide, label = test_slides[x], test_labels[x]
+                        results = []
+                        for i in range(len(test_patches)):
+                            if test_patches[i]['slide_name'].split('_')[2] == slide:
+                                results.append(predictions[i])
+                        predict_0 = results.count(0)
+                        predict_1 = results.count(1)
+                        df = df.append({'Slide': slide,
+                                        'Method': name,
+                                        'Task': t,
+                                        'Level': level,
+                                        'True': label,
+                                        'Fold': fold,
+                                        'Predict_0': predict_0,
+                                        'Predict_1': predict_1}, ignore_index=True)
             df['Ratio'] = df['Predict_1']/(df['Predict_1']+df['Predict_0'])
-            df.to_csv(os.path.join(outdir, f'Slide_predictions_{t}_level{level}.csv'), index=False)
+            df.to_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}.csv'), index=False)
 
 
 if __name__ == "__main__":

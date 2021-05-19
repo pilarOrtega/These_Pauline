@@ -100,7 +100,6 @@ def main():
     classifiers = [
         KNeighborsClassifier(3),
         SVC(kernel="linear", C=0.025),
-        SVC(gamma=2, C=1),
         GaussianProcessClassifier(1.0 * RBF(1.0)),
         DecisionTreeClassifier(max_depth=5),
         RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
@@ -205,8 +204,8 @@ def main():
                                         'Fold': fold,
                                         'Predict_0': predict_0,
                                         'Predict_1': predict_1}, ignore_index=True)
-            df['Ratio'] = df['Predict_1']/(df['Predict_1']+df['Predict_0'])
-            df.to_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}.csv'), index=False)
+                    df['Ratio'] = df['Predict_1']/(df['Predict_1']+df['Predict_0'])
+                    df.to_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}.csv'), index=False)
 
 
 if __name__ == "__main__":

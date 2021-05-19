@@ -98,12 +98,12 @@ def main():
              "Naive Bayes", "QDA"]
 
     classifiers = [
-        KNeighborsClassifier(3),
-        SVC(kernel="linear", C=0.025),
-        GaussianProcessClassifier(1.0 * RBF(1.0)),
-        DecisionTreeClassifier(max_depth=5),
-        RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
-        MLPClassifier(alpha=1, max_iter=1000),
+        #KNeighborsClassifier(3),
+        #SVC(kernel="linear", C=0.025),
+        #GaussianProcessClassifier(1.0 * RBF(1.0)),
+        DecisionTreeClassifier(),
+        RandomForestClassifier(n_estimators=100),
+        MLPClassifier(max_iter=1000),
         AdaBoostClassifier(),
         GaussianNB(),
         QuadraticDiscriminantAnalysis()]
@@ -143,14 +143,17 @@ def main():
             slides, indices = np.unique(slides, return_index=True)
             labels_slides = [x for x in labels[indices]]
             labels_slides = np.asarray(labels_slides)
-            df = pd.DataFrame([], columns=['Slide',
-                                           'Method',
-                                           'Task',
-                                           'Level',
-                                           'True',
-                                           'Fold',
-                                           'Predict_0',
-                                           'Predict_1'])
+            try:
+                df = pd.read_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}.csv'), sep=None, engine='python')
+            except:
+                df = pd.DataFrame([], columns=['Slide',
+                                               'Method',
+                                               'Task',
+                                               'Level',
+                                               'True',
+                                               'Fold',
+                                               'Predict_0',
+                                               'Predict_1'])
             for name, model in zip(names, classifiers):
                 print(f'Evaluating classifier {name}')
                 splitter = StratifiedShuffleSplit(

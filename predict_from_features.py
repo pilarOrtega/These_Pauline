@@ -158,7 +158,7 @@ def main():
                                                'Fold',
                                                'Predict_0',
                                                'Predict_1'])
-            for name, model in zip(names, classifiers):
+            for name, model_func in zip(names, classifiers):
                 print(f'Evaluating classifier {name}')
                 splitter = StratifiedShuffleSplit(
                     n_splits=5,
@@ -168,6 +168,7 @@ def main():
                 fold = 0
                 scores = []
                 for train_indices, test_indices in splitter.split(slides, labels_slides):
+                    model = model_func
                     train_slides, test_slides = slides[train_indices], slides[test_indices]
                     train_labels, test_labels = labels_slides[train_indices], labels_slides[test_indices]
                     xtrain, xtest, ytrain, ytest, train_patches, test_patches = [], [], [], [], [], []

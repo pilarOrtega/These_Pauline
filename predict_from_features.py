@@ -95,7 +95,6 @@ def main():
 
     names = [#"Nearest Neighbors",
              #"Linear SVM",
-             "Gaussian Process",
              #"Decision Tree",
              #"Random Forest",
              "Neural Net",
@@ -106,7 +105,6 @@ def main():
     classifiers = [
         #KNeighborsClassifier(3),
         #SVC(kernel="linear", C=0.025),
-        GaussianProcessClassifier(1.0 * RBF(1.0)),
         #DecisionTreeClassifier(),
         #RandomForestClassifier(n_estimators=100),
         MLPClassifier(max_iter=1000),

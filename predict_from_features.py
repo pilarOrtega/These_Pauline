@@ -208,20 +208,24 @@ def main():
                         df_pathaia = df_pathaia.set_index('id')
                         for i in range(len(test_patches)):
                             if test_patches[i]['slide'] == folder:
-                                df_pathaia.loc[test_patches[i]['id'], f'Pred_{name}'] = inv_labels_dict[predictions[i]]
-                                df_pathaia.loc[test_patches[i]['id'], f'Prob_{name}_0'] = predictions_proba[i, 0]
-                                df_pathaia.loc[test_patches[i]['id'], f'Prob_{name}_1'] = predictions_proba[i, 1]
+                                df_pathaia.loc[test_patches[i]['id'], f'Pred_{name}_{t}'] = inv_labels_dict[predictions[i]]
+                                df_pathaia.loc[test_patches[i]['id'], f'Prob_{name}_{t}_0'] = round(predictions_proba[i, 0], 2)
+                                df_pathaia.loc[test_patches[i]['id'], f'Prob_{name}_{t}_1'] = round(predictions_proba[i, 1], 2)
                         df_pathaia = df_pathaia.reset_index()
                         df_pathaia.to_csv(df_pathaia_folder, index=False)
                     fold += 1
                     for x in range(len(test_slides)):
                         slide, label = test_slides[x], test_labels[x]
-                        results = []
+                        results, prob_0, prob_1 = [], [], []
                         for i in range(len(test_patches)):
                             if test_patches[i]['slide_name'].split('_')[2] == slide:
                                 results.append(predictions[i])
+                                prob_0.append(predictions_proba[i, 0])
+                                prob_1.append(predictions_proba[i, 1])
                         predict_0 = results.count(0)
                         predict_1 = results.count(1)
+                        avg_0 = sum(np.asarray(prob_0))/len(prob_0)
+                        avg_1 = sum(np.asarray(prob_1))/len(prob_1)
                         df = df.append({'Slide': slide,
                                         'Method': name,
                                         'Task': t,
@@ -229,7 +233,9 @@ def main():
                                         'True': label,
                                         'Fold': fold,
                                         'Predict_0': predict_0,
-                                        'Predict_1': predict_1}, ignore_index=True)
+                                        'Predict_1': predict_1,
+                                        'Avg_0': avg_0,
+                                        'Avg_1': avg_1}, ignore_index=True)
                     df['Ratio'] = df['Predict_1']/(df['Predict_1']+df['Predict_0'])
                     df.to_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}.csv'), index=False)
 

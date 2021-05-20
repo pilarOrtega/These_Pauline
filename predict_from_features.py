@@ -208,9 +208,9 @@ def main():
                         df_pathaia = df_pathaia.set_index('id')
                         for i in range(len(test_patches)):
                             if test_patches[i]['slide'] == folder:
-                                df_pathaia.at[test_patches, f'Pred_{name}'] = inv_labels_dict[predictions[i]]
-                                df_pathaia.at[test_patches, f'Prob_{name}_0'] = predictions_proba[i, 0]
-                                df_pathaia.at[test_patches, f'Prob_{name}_1'] = predictions_proba[i, 1]
+                                df_pathaia.loc[test_patches[i]['id'], f'Pred_{name}'] = inv_labels_dict[predictions[i]]
+                                df_pathaia.loc[test_patches[i]['id'], f'Prob_{name}_0'] = predictions_proba[i, 0]
+                                df_pathaia.loc[test_patches[i]['id'], f'Prob_{name}_1'] = predictions_proba[i, 1]
                         df_pathaia = df_pathaia.reset_index()
                         df_pathaia.to_csv(df_pathaia_folder, index=False)
                     fold += 1

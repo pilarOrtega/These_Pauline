@@ -11,8 +11,6 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -97,22 +95,24 @@ def main():
              "Linear SVM",
              "Decision Tree",
              "Random Forest",
-             #"Neural Net",
-             #"AdaBoost",
-             #"Naive Bayes",
-             #"QDA"
+             "Neural Net",
+             "AdaBoost",
+             "Naive Bayes",
+             "QDA"
              ]
 
     classifiers = [
         KNeighborsClassifier(3),
-        SVC(kernel="linear", C=0.025),
+        SVC(kernel="linear", C=0.025, probability=True),
         DecisionTreeClassifier(),
-        RandomForestClassifier(n_estimators=100)
-        #MLPClassifier(max_iter=1000),
-        #AdaBoostClassifier(),
-        #GaussianNB(),
-        #QuadraticDiscriminantAnalysis()
+        RandomForestClassifier(n_estimators=100),
+        MLPClassifier(max_iter=1000),
+        AdaBoostClassifier(),
+        GaussianNB(),
+        QuadraticDiscriminantAnalysis()
         ]
+
+
 
     for t in tasks:
         for level in levels:
@@ -124,6 +124,7 @@ def main():
             elif t in ['Task_5']:
                 labels = ['T' if v == 'T' else 'N' if v == 'N' else 'NA' for v in labels]
             patches, labels, labels_dict = get_whole_dataset(patches, labels)
+            inv_labels_dict = {v: k for k, v in labels_dict.items()}
             if os.path.exists(file):
                 patch_array = np.load(file)
                 print(f'Loaded file {file}')
@@ -191,12 +192,27 @@ def main():
                     score = model.score(xtest, ytest)
                     scores.append(score)
                     predictions = model.predict(xtest)
+                    predictions_proba = model.predict_proba(xtest)
                     print('Accuracy for fold {}: {}'.format(i, score))
                     table = classification_report(
                         ytest, predictions, target_names=list(labels_dict.keys()))
                     print(table)
                     with open(os.path.join(outdir, f'{name}_{t}_level{level}_fold{fold}.txt'), 'w') as f:
                         f.write(table)
+                    # Save predictions to PathAIA folder:
+                    pathaia_folders = [x['slide'] for x in test_patches]
+                    pathaia_folders = np.unique(pathaia_folders)
+                    for folder in pathaia_folders:
+                        df_pathaia_folder = util.get_patch_csv_from_patch_folder(folder.replace(slide_dir, proj_dir).split('.')[0])
+                        df_pathaia = pd.read_csv(df_pathaia_folder, sep=None, engine='python')
+                        df_pathaia = df_pathaia.set_index('id')
+                        for i in range(len(test_patches)):
+                            if test_patches[i]['slide'] == folder:
+                                df_pathaia.loc[test_patches][f'Pred_{name}'] = inv_labels_dict[predictions[i]]
+                                df_pathaia.loc[test_patches][f'Prob_{name}_0'] = predictions_proba[i, 0]
+                                df_pathaia.loc[test_patches][f'Prob_{name}_1'] = predictions_proba[i, 1]
+                        df_pathaia = df_pathaia.reset_index()
+                        df_pathaia.to_csv(df_pathaia_folder, index=False)
                     fold += 1
                     for x in range(len(test_slides)):
                         slide, label = test_slides[x], test_labels[x]

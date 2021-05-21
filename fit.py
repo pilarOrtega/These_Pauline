@@ -9,7 +9,7 @@ from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.backend import clear_session
 from tensorflow.keras import Model
 from sklearn.model_selection import StratifiedShuffleSplit
-from keras.optimizers import Adam, SGD
+from keras.optimizers import Adam
 import numpy as np
 import yaml
 from tensorflow.keras.layers import Input
@@ -222,33 +222,6 @@ def main():
         logger.info("Start benchmarking")
         for name in models_CNN.models.keys():
             logger.info("Model {}".format(name))
-            preproc = models_CNN.models[name]['module'].preprocess_input
-            ModelClass = models_CNN.models[name]['model']
-            # clear session before doing anything
-            clear_session()
-            # create the model
-            if "custom" in name:
-                model = create_custom_model(
-                    ModelClass,
-                    archi_cfg["hidden"],
-                    len(np.unique(labels)),
-                    data_cfg["size"]
-                )
-            else:
-                model = create_model(
-                    ModelClass,
-                    archi_cfg["hidden"],
-                    len(np.unique(labels)),
-                    weights=training_cfg["pretrain"]
-                )
-            # create the optimizer
-            opt = Adam(learning_rate=training_cfg["lr"])
-            # compile model with optimizer
-            model.compile(
-                optimizer=opt,
-                loss=training_cfg["loss"],
-                metrics=["accuracy"]
-            )
             logger.info(
                 "Running {} fit-test procedures".format(
                     experiment_cfg["folds"])
@@ -263,6 +236,33 @@ def main():
             labels_slides = [x for x in labels[indices]]
             results = []
             for train_indices, test_indices in splitter.split(slides, labels_slides):
+                preproc = models_CNN.models[name]['module'].preprocess_input
+                ModelClass = models_CNN.models[name]['model']
+                # clear session before doing anything
+                clear_session()
+                # create the model
+                if "custom" in name:
+                    model = create_custom_model(
+                        ModelClass,
+                        archi_cfg["hidden"],
+                        len(np.unique(labels)),
+                        data_cfg["size"]
+                    )
+                else:
+                    model = create_model(
+                        ModelClass,
+                        archi_cfg["hidden"],
+                        len(np.unique(labels)),
+                        weights=training_cfg["pretrain"]
+                    )
+                # create the optimizer
+                opt = Adam(learning_rate=training_cfg["lr"])
+                # compile model with optimizer
+                model.compile(
+                    optimizer=opt,
+                    loss=training_cfg["loss"],
+                    metrics=["accuracy"]
+                )
                 train_slides, test_slides = slides[train_indices], slides[test_indices]
                 xtrain, xtest, ytrain, ytest = [], [], [], []
                 for i in range(len(patches)):

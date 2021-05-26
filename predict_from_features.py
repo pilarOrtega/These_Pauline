@@ -122,6 +122,8 @@ def main():
             file = f'/data/Projet_Pauline/{t}_level{level}.npy'
             patches, labels = handler.list_patches(level=level, dim=(224, 224), column=t)
             if old_mode:
+                labels = [labels[i] for i in range(len(labels)) if not 'Cas_supplementaires' in patches[i]['slide_path']]
+                patches = [p for p in patches if not 'Cas_supplementaires' in p['slide_path']]
                 for i in range(len(patches)):
                     if 'Cas_supplementaires' in patches[i]['slide_path']:
                         del patches[i]

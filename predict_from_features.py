@@ -25,6 +25,7 @@ parser.add_argument("--slidedir", type=str,
 parser.add_argument("--projdir", type=str,
                     help="pathaia dataset directory.")
 parser.add_argument("--outdir", type=str)
+parser.add_argument("--old_mode", default=False)
 parser.add_argument("--tasks", nargs='+',
                     help="Tasks to analyze")
 parser.add_argument("--levels", nargs='+', type=int,
@@ -89,6 +90,7 @@ def main():
     tasks = args.tasks
     levels = args.levels
     outdir = args.outdir
+    old_mode = args.old_mode
     handler = util.PathaiaHandler(proj_dir, slide_dir)
 
     names = ["Nearest Neighbors",
@@ -119,13 +121,18 @@ def main():
             level = int(level)
             file = f'/data/Projet_Pauline/{t}_level{level}.npy'
             patches, labels = handler.list_patches(level=level, dim=(224, 224), column=t)
+            if old_mode:
+                for i in range(len(patches)):
+                    if 'Cas_supplementaires' in patches[i]['slide_path']:
+                        del patches[i]
+                        del labels[i]
             if t in ['Task_1', 'Task_2', 'Task_3']:
                 labels = ['NR' if v == 'NR' else 'R' if v == 'R' else 'NA' for v in labels]
             elif t in ['Task_5']:
                 labels = ['T' if v == 'T' else 'N' if v == 'N' else 'NA' for v in labels]
             patches, labels, labels_dict = get_whole_dataset(patches, labels)
             inv_labels_dict = {v: k for k, v in labels_dict.items()}
-            if os.path.exists(file):
+            if os.path.exists(file) and not old_mode:
                 patch_array = np.load(file)
                 print(f'Loaded file {file}')
             else:
@@ -142,7 +149,8 @@ def main():
                     for y in range(512):
                         patch_array[x, y] = features[f'{y}']
                     x += 1
-                np.save(f'/data/Projet_Pauline/{t}_level{level}.npy', patch_array)
+                if not old_mode:
+                    np.save(f'/data/Projet_Pauline/{t}_level{level}.npy', patch_array)
             # train and validate the model
             slides = [x['slide_name'] for x in patches]
             # get name slide

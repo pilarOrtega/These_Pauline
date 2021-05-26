@@ -1,7 +1,7 @@
 # goya config file for deep learning keras applications
-date: 2021-05-21
+date: 2021-05-26
 data:
-  level: 0
+  level: 1
   size: 224
   channels: 3
   tasks:

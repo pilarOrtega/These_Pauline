@@ -204,6 +204,10 @@ def main():
             (data_cfg["size"], data_cfg["size"]),
             task
         )
+        if task in ['Task_1', 'Task_2', 'Task_3']:
+            tags = ['NR' if v == 'NR' else 'R' if v == 'R' else 'NA' for v in tags]
+        elif task in ['Task_5']:
+            tags = ['T' if v == 'T' else 'N' if v == 'N' else 'NA' for v in tags]
         patches, labels, labels_dict = get_whole_dataset(ptcs, tags)
         n_classes = len(np.unique(labels))
         logger.debug(

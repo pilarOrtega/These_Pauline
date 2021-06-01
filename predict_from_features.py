@@ -177,6 +177,7 @@ def main():
                 print(f'Evaluating classifier {name}')
                 splitter = StratifiedKFold(
                     n_splits=5,
+                    shuffle=True,
                     random_state=42
                 )
                 fold = 0

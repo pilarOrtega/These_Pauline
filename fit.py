@@ -219,6 +219,7 @@ def main():
             np.unique(labels, return_counts=True)))
         splitter = StratifiedKFold(
             n_splits=experiment_cfg["folds"],
+            shuffle=True,
             random_state=experiment_cfg["seed"]
         )
         # create and test different models

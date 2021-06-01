@@ -8,7 +8,7 @@ import pandas as pd
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.backend import clear_session
 from tensorflow.keras import Model
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedKFold
 from keras.optimizers import Adam
 import numpy as np
 import yaml
@@ -217,9 +217,8 @@ def main():
         )
         logger.debug("counts: {}".format(
             np.unique(labels, return_counts=True)))
-        splitter = StratifiedShuffleSplit(
+        splitter = StratifiedKFold(
             n_splits=experiment_cfg["folds"],
-            test_size=experiment_cfg["split"],
             random_state=experiment_cfg["seed"]
         )
         # create and test different models

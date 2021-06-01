@@ -163,7 +163,7 @@ def main():
             labels_slides = [x for x in labels[indices]]
             labels_slides = np.asarray(labels_slides)
             try:
-                df = pd.read_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}.csv'), sep=None, engine='python')
+                df = pd.read_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}_{date}.csv'), sep=None, engine='python')
             except:
                 df = pd.DataFrame([], columns=['Slide',
                                                'Method',

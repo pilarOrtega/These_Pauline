@@ -163,16 +163,19 @@ def main():
             labels_slides = [x for x in labels[indices]]
             labels_slides = np.asarray(labels_slides)
             try:
-                df = pd.read_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}.csv'), sep=None, engine='python')
+                df = pd.read_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}_{date}.csv'), sep=None, engine='python')
             except:
                 df = pd.DataFrame([], columns=['Slide',
                                                'Method',
                                                'Task',
+                                               'Date',
                                                'Level',
                                                'True',
                                                'Fold',
                                                'Predict_0',
-                                               'Predict_1'])
+                                               'Predict_1',
+                                               'Avg_0',
+                                               'Avg_1'])
             for name, model_func in zip(names, classifiers):
                 print(f'Evaluating classifier {name}')
                 splitter = StratifiedKFold(
@@ -241,6 +244,7 @@ def main():
                         df = df.append({'Slide': slide,
                                         'Method': name,
                                         'Task': t,
+                                        'Date': date,
                                         'Level': level,
                                         'True': label,
                                         'Fold': fold,

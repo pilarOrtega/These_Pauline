@@ -168,11 +168,14 @@ def main():
                 df = pd.DataFrame([], columns=['Slide',
                                                'Method',
                                                'Task',
+                                               'Date',
                                                'Level',
                                                'True',
                                                'Fold',
                                                'Predict_0',
-                                               'Predict_1'])
+                                               'Predict_1',
+                                               'Avg_0',
+                                               'Avg_1'])
             for name, model_func in zip(names, classifiers):
                 print(f'Evaluating classifier {name}')
                 splitter = StratifiedKFold(
@@ -241,6 +244,7 @@ def main():
                         df = df.append({'Slide': slide,
                                         'Method': name,
                                         'Task': t,
+                                        'Date': date,
                                         'Level': level,
                                         'True': label,
                                         'Fold': fold,

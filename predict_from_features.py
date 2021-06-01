@@ -7,7 +7,7 @@ from tqdm import tqdm
 import numpy
 from sklearn.svm import LinearSVC
 from sklearn.metrics import classification_report
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedKFold
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -30,6 +30,7 @@ parser.add_argument("--tasks", nargs='+',
                     help="Tasks to analyze")
 parser.add_argument("--levels", nargs='+', type=int,
                     help="Levels to analyze")
+parser.add_argument("--date", type=str, default="")
 parser.add_argument("--device", default="0", type=str,
                     help="ID of the device to use for computation.")
 
@@ -90,6 +91,7 @@ def main():
     tasks = args.tasks
     levels = args.levels
     outdir = args.outdir
+    date = args.date
     old_mode = args.old_mode
     handler = util.PathaiaHandler(proj_dir, slide_dir)
 
@@ -173,9 +175,8 @@ def main():
                                                'Predict_1'])
             for name, model_func in zip(names, classifiers):
                 print(f'Evaluating classifier {name}')
-                splitter = StratifiedShuffleSplit(
+                splitter = StratifiedKFold(
                     n_splits=5,
-                    test_size=0.2,
                     random_state=42
                 )
                 fold = 0
@@ -247,7 +248,7 @@ def main():
                                         'Avg_0': avg_0,
                                         'Avg_1': avg_1}, ignore_index=True)
                     df['Ratio'] = df['Predict_1']/(df['Predict_1']+df['Predict_0'])
-                    df.to_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}.csv'), index=False)
+                    df.to_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}_{date}.csv'), index=False)
 
 
 if __name__ == "__main__":

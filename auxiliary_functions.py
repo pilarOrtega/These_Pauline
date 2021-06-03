@@ -55,7 +55,7 @@ def get_whole_dataset(ptcs, tags):
     patches = []
     unique_tags = np.unique(tags)
     for t in range(len(tags)):
-        tag = tags[t]
+        tag = str(tags[t])
         patch = ptcs[t]
         if tag in unique_tags and tag not in ["NA", 'nan']:
             labels.append(tag)

@@ -15,6 +15,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.linear_model import LogisticRegression
+
 import argparse
 
 
@@ -95,25 +97,27 @@ def main():
     old_mode = args.old_mode
     handler = util.PathaiaHandler(proj_dir, slide_dir)
 
-    names = ["Nearest Neighbors",
-             "Linear SVM",
-             "Decision Tree",
-             "Random Forest",
-             "Neural Net",
-             "AdaBoost",
-             "Naive Bayes",
-             "QDA"
+    names = ["Nearest Neighbors k=1",
+             "Linear Regression"
+             # "Linear SVM",
+             # "Decision Tree",
+             # "Random Forest",
+             # "Neural Net",
+             # "AdaBoost",
+             # "Naive Bayes",
+             # "QDA"
              ]
 
     classifiers = [
-        KNeighborsClassifier(3),
-        SVC(kernel="linear", C=0.025, probability=True),
-        DecisionTreeClassifier(),
-        RandomForestClassifier(n_estimators=100),
-        MLPClassifier(max_iter=1000),
-        AdaBoostClassifier(),
-        GaussianNB(),
-        QuadraticDiscriminantAnalysis()
+        KNeighborsClassifier(1),
+        LogisticRegression(max_iter=1000, multi_class='auto'),
+        # SVC(kernel="linear", C=0.025, probability=True),
+        # DecisionTreeClassifier(),
+        # RandomForestClassifier(n_estimators=100),
+        # MLPClassifier(max_iter=1000),
+        # AdaBoostClassifier(),
+        # GaussianNB(),
+        # QuadraticDiscriminantAnalysis()
         ]
 
 

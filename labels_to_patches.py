@@ -2,7 +2,8 @@ import os
 import argparse
 import logging
 import pandas as pd
-from auxiliary_functions import get_patch_folders_in_project, get_patch_csv_from_patch_folder
+from data import get_patch_folders_in_project, get_patch_csv_from_patch_folder
+from unidecode import unidecode
 
 
 class Error(Exception):
@@ -84,23 +85,33 @@ parser.add_argument("--data", type=str,
                     help="data file.")
 parser.add_argument("--projdir", type=str,
                     help="pathaia dataset directory.")
+parser.add_argument("--cohort", type=str, default='Lymphopath',
+                    help='name of the cohort')
 
 args = parser.parse_args()
 
 
 def main():
     data = pd.read_csv(args.data, sep=None, engine='python')
-    data.set_index("NUM_anapath", inplace=True)
     proj_dir = args.projdir
+    cohort = args.cohort
 
-    for slidename, ptc_folder in get_patch_folders_in_project(proj_dir):
+    for ptc_folder in get_patch_folders_in_project(proj_dir):
         try:
             patches_csv = get_patch_csv_from_patch_folder(ptc_folder)
             patches = pd.read_csv(patches_csv, sep=None, engine='python')
-            slidename_short = slidename.split('_')[2]
-            slidename_short = slidename_short[:9]
+            slidename = os.path.basename(ptc_folder)
+            if cohort in ['Lymphopath']:
+                slidename_short = slidename.split('_')[2]
+                slidename_short = slidename_short[:9]
+            if cohort in ['Lysa']:
+                slidename_short = slidename.split(' ')[3].split('-')[0]
+                if slidename_short[0] == '0':
+                    slidename_short = slidename_short[1:]
             type = os.path.dirname(ptc_folder)
             type = os.path.basename(type)
+            type = type.replace(' ', '_')
+            type = unidecode(type)
             size = len(patches)
             choices = {'DHL_BCL2': ('R', 'R', 'R', 'T'),
                        'DHL_BCL6': ('R', 'R', 'R', 'T'),
@@ -110,24 +121,26 @@ def main():
                        'MYC_rearrange_seul': ('NA', 'R', 'R', 'T'),
                        'MYC_rearrange_seul_ou_DHL_BCL6': ('NA', 'R', 'R', 'T'),
                        'Architecture_ganglion_normal': ('NA', 'NA', 'NA', 'N'),
+                       'Architecture_ganglion_normale': ('NA', 'NA', 'NA', 'N'),
                        'Artefacts': ('NA', 'NA', 'NA', 'N'),
                        'Autres_tissus': ('NA', 'NA', 'NA', 'N')}
-            t1, t2, t3, t5 = choices.get(type, ('NA', 'NA', 'NA'))
+            t1, t2, t3, t5 = choices.get(type, ('NA', 'NA', 'NA', 'NA'))
             patches['Type'] = [type for n in range(size)]
             patches['Task_1'] = [t1 for n in range(size)]
             patches['Task_2'] = [t2 for n in range(size)]
             patches['Task_3'] = [t3 for n in range(size)]
             patches['Task_5'] = [t5 for n in range(size)]
             try:
-                patient_row = data.loc[slidename_short]
+                index = data[data['NUM_anapath'].str.contains(slidename_short)].index[0]
+                patient_row = data.loc[index]
                 if type in ['Architecture_ganglion_normal', 'Autres_tissus', 'Artefacts']:
                     patches['Task_4'] = ['NA' for n in range(size)]
                 else:
                     patches['Task_4'] = [patient_row['GC_non_GC'] for n in range(size)]
-            except KeyError as e:
-                logger.warning(str(e))
+            except IndexError as e:
+                logger.warning(f'Slide {slidename_short} not found')
                 # rewrite dataframe
-            patches.to_csv(patches_csv)
+            patches.to_csv(patches_csv, index=False)
         except PatchesNotFoundError as e:
             logger.warning(str(e))
 

@@ -34,18 +34,18 @@ models = {
         'model': densenet.DenseNet121,
         'module': densenet
     },
-    # 'DenseNet169': {
-    #     'model': densenet.DenseNet169,
-    #     'module': densenet
-    # },
-    # 'NASNet': {
-    #     'model': nasnet.NASNetMobile,
-    #     'module': nasnet
-    # },
-    # 'VGG16': {
-    #     'model': vgg16.VGG16,
-    #     'module': vgg16
-    # },
+    'DenseNet169': {
+        'model': densenet.DenseNet169,
+        'module': densenet
+    },
+    'NASNet': {
+        'model': nasnet.NASNetMobile,
+        'module': nasnet
+    },
+    'VGG16': {
+        'model': vgg16.VGG16,
+        'module': vgg16
+    },
     'Xception': {
         'model': xception.Xception,
         'module': xception

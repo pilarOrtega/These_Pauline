@@ -1,9 +1,10 @@
 import pathaia.util.management as util
 import numpy as np
+from scipy.sparse import data
 from auxiliary_functions import get_whole_dataset
 import os
 import pandas as pd
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import numpy
 from sklearn.svm import LinearSVC
 from sklearn.metrics import classification_report
@@ -26,6 +27,7 @@ parser.add_argument("--slidedir", type=str,
                     help="slide dataset directory.")
 parser.add_argument("--projdir", type=str,
                     help="pathaia dataset directory.")
+parser.add_argument("--data_csv", type=str)
 parser.add_argument("--outdir", type=str)
 parser.add_argument("--old_mode", default=False)
 parser.add_argument("--tasks", nargs='+',
@@ -95,33 +97,36 @@ def main():
     outdir = args.outdir
     date = args.date
     old_mode = args.old_mode
+    data_csv = args.data_csv
     handler = util.PathaiaHandler(proj_dir, slide_dir)
 
-    names = ["Nearest Neighbors k=1",
-             "Linear Regression"
-             # "Linear SVM",
-             # "Decision Tree",
-             # "Random Forest",
-             # "Neural Net",
-             # "AdaBoost",
-             # "Naive Bayes",
-             # "QDA"
+    names = [
+             "Nearest Neighbors",
+            # "Linear Regression",
+             "Linear SVM",
+             "Decision Tree",
+             "Random Forest",
+             "Neural Net",
+             "AdaBoost",
+             "Naive Bayes",
+             "QDA"
              ]
 
     classifiers = [
-        KNeighborsClassifier(1),
-        LogisticRegression(max_iter=1000, multi_class='auto'),
-        # SVC(kernel="linear", C=0.025, probability=True),
-        # DecisionTreeClassifier(),
-        # RandomForestClassifier(n_estimators=100),
-        # MLPClassifier(max_iter=1000),
-        # AdaBoostClassifier(),
-        # GaussianNB(),
-        # QuadraticDiscriminantAnalysis()
+        KNeighborsClassifier(),
+        # LogisticRegression(max_iter=1000, multi_class='auto'),
+        SVC(kernel="linear", C=0.025, probability=True),
+        DecisionTreeClassifier(),
+        RandomForestClassifier(n_estimators=100),
+        MLPClassifier(max_iter=1000),
+        AdaBoostClassifier(),
+        GaussianNB(),
+        QuadraticDiscriminantAnalysis()
         ]
 
 
-
+    data_csv = pd.read_csv(data_csv, sep=None, engine='python')
+    
     for t in tasks:
         for level in levels:
             level = int(level)
@@ -147,16 +152,21 @@ def main():
                 print(f'Extracting {t} from level {level}')
                 patch_array = np.zeros((len(patches), 512))
                 x = 0
-                for patch in tqdm(patches):
-                    folder = os.path.dirname(patch['slide']).replace(slide_dir, proj_dir)
-                    folder = os.path.join(folder, patch['slide_name'].split('.')[0])
-                    feat_file = os.path.join(folder, f'features_{method}.csv')
-                    df = pd.read_csv(feat_file)
-                    df = df.set_index('id')
-                    features = df.loc[patch['id']]
-                    for y in range(512):
-                        patch_array[x, y] = features[f'{y}']
-                    x += 1
+                for patch in tqdm(patches, position=0, leave=True, ascii=True):
+                    try:
+                        folder = os.path.dirname(patch['slide']).replace(slide_dir, proj_dir)
+                        folder = os.path.join(folder, patch['slide_name'].split('.')[0])
+                        feat_file = os.path.join(folder, f'features_{method}.csv')
+                        df = pd.read_csv(feat_file)
+                        df = df.set_index('id')
+                        features = df.loc[patch['id']]
+                        for y in range(512):
+                            patch_array[x, y] = features[f'{y}']
+                        x += 1
+                    except (KeyError, FileNotFoundError):
+                        slide = patch['slide']
+                        id = patch['id']
+                        print(f'Skip patch {slide} id {id}')
                 if not old_mode:
                     np.save(f'/data/Projet_Pauline/{t}_level{level}.npy', patch_array)
             # train and validate the model
@@ -182,82 +192,98 @@ def main():
                                                'Avg_1'])
             for name, model_func in zip(names, classifiers):
                 print(f'Evaluating classifier {name}')
-                splitter = StratifiedKFold(
-                    n_splits=5,
-                    shuffle=True,
-                    random_state=42
-                )
+                # splitter = StratifiedKFold(
+                #     n_splits=5,
+                #     shuffle=True,
+                #     random_state=42
+                # )
+
+                train_slides = [x['SLIDE'] for i, x in data_csv[data_csv['SPLIT']=='Train'].iterrows()]
+                test_slides = [x['SLIDE'] for i, x in data_csv[data_csv['SPLIT']=='Test'].iterrows()]
+                test_labels = [x['gc/non_gc'] for i, x in data_csv[data_csv['SPLIT']=='Test'].iterrows()]
                 fold = 0
+
                 scores = []
-                for train_indices, test_indices in splitter.split(slides, labels_slides):
-                    model = model_func
-                    train_slides, test_slides = slides[train_indices], slides[test_indices]
-                    train_labels, test_labels = labels_slides[train_indices], labels_slides[test_indices]
-                    xtrain, xtest, ytrain, ytest, train_patches, test_patches = [], [], [], [], [], []
-                    for i in range(len(patches)):
-                        if patches[i]['slide_name'].split('_')[2] in train_slides:
-                            xtrain.append(patch_array[i, :])
-                            ytrain.append(labels[i])
-                            train_patches.append(patches[i])
-                        elif patches[i]['slide_name'].split('_')[2] in test_slides:
-                            xtest.append(patch_array[i, :])
-                            ytest.append(labels[i])
-                            test_patches.append(patches[i])
-                    print('Balance set...')
-                    train_patches, ytrain, xtrain = balanced_set(train_patches, ytrain, xtrain)
-                    print(f'Rebalanced: {np.unique(ytrain, return_counts=True)}')
-                    print('Start fitting...')
-                    model.fit(xtrain, ytrain)
-                    score = model.score(xtest, ytest)
-                    scores.append(score)
-                    predictions = model.predict(xtest)
-                    predictions_proba = model.predict_proba(xtest)
-                    print('Accuracy for fold {}: {}'.format(i, score))
-                    table = classification_report(
-                        ytest, predictions, target_names=list(labels_dict.keys()))
-                    print(table)
-                    with open(os.path.join(outdir, f'{name}_{t}_level{level}_fold{fold}.txt'), 'w') as f:
-                        f.write(table)
-                    # Save predictions to PathAIA folder:
-                    pathaia_folders = [x['slide'] for x in test_patches]
-                    pathaia_folders = np.unique(pathaia_folders)
-                    for folder in pathaia_folders:
-                        df_pathaia_folder = util.get_patch_csv_from_patch_folder(folder.replace(slide_dir, proj_dir).split('.')[0])
-                        df_pathaia = pd.read_csv(df_pathaia_folder, sep=None, engine='python')
-                        df_pathaia = df_pathaia.set_index('id')
-                        for i in range(len(test_patches)):
-                            if test_patches[i]['slide'] == folder:
-                                df_pathaia.loc[test_patches[i]['id'], f'Pred_{name}_{t}'] = inv_labels_dict[predictions[i]]
-                                df_pathaia.loc[test_patches[i]['id'], f'Prob_{name}_{t}_0'] = round(predictions_proba[i, 0], 2)
-                                df_pathaia.loc[test_patches[i]['id'], f'Prob_{name}_{t}_1'] = round(predictions_proba[i, 1], 2)
-                        df_pathaia = df_pathaia.reset_index()
-                        df_pathaia.to_csv(df_pathaia_folder, index=False)
-                    fold += 1
-                    for x in range(len(test_slides)):
-                        slide, label = test_slides[x], test_labels[x]
-                        results, prob_0, prob_1 = [], [], []
-                        for i in range(len(test_patches)):
-                            if test_patches[i]['slide_name'].split('_')[2] == slide:
-                                results.append(predictions[i])
-                                prob_0.append(predictions_proba[i, 0])
-                                prob_1.append(predictions_proba[i, 1])
-                        predict_0 = results.count(0)
-                        predict_1 = results.count(1)
+            # for train_indices, test_indices in splitter.split(slides, labels_slides):
+                model = model_func
+                # train_slides, test_slides = slides[train_indices], slides[test_indices]
+                # train_labels, test_labels = labels_slides[train_indices], labels_slides[test_indices]
+                xtrain, xtest, ytrain, ytest, train_patches, test_patches = [], [], [], [], [], []
+                for i in range(len(patches)):
+                    if patches[i]['slide_name'].split('_')[2] in train_slides:
+                        xtrain.append(patch_array[i, :])
+                        ytrain.append(labels[i])
+                        train_patches.append(patches[i])
+                    elif patches[i]['slide_name'].split('_')[2] in test_slides:
+                        xtest.append(patch_array[i, :])
+                        ytest.append(labels[i])
+                        test_patches.append(patches[i])
+                print('Balance set...')
+                train_patches, ytrain, xtrain = balanced_set(train_patches, ytrain, xtrain)
+                print(f'Rebalanced: {np.unique(ytrain, return_counts=True)}')
+                print('Start fitting...')
+                model.fit(xtrain, ytrain)
+                score = model.score(xtest, ytest)
+                scores.append(score)
+                predictions = model.predict(xtest)
+                predictions_proba = model.predict_proba(xtest)
+                print('Accuracy for fold {}: {}'.format(i, score))
+                table = classification_report(
+                    ytest, predictions, target_names=list(labels_dict.keys()))
+                print(table)
+                with open(os.path.join(outdir, f'{name}_{t}_level{level}_fold{fold}.txt'), 'w') as f:
+                    f.write(table)
+                # Save predictions to PathAIA folder:
+                pathaia_folders = [x['slide'] for x in test_patches]
+                pathaia_folders = np.unique(pathaia_folders)
+                for folder in pathaia_folders:
+                    df_pathaia_folder = util.get_patch_csv_from_patch_folder(folder.replace(slide_dir, proj_dir).split('.')[0])
+                    df_pathaia = pd.read_csv(df_pathaia_folder, sep=None, engine='python')
+                    df_pathaia = df_pathaia.set_index('id')
+                    for i in range(len(test_patches)):
+                        if test_patches[i]['slide'] == folder:
+                            df_pathaia.loc[test_patches[i]['id'], f'Pred_{name}_{t}'] = inv_labels_dict[predictions[i]]
+                            df_pathaia.loc[test_patches[i]['id'], f'Prob_{name}_{t}_0'] = round(predictions_proba[i, 0], 2)
+                            df_pathaia.loc[test_patches[i]['id'], f'Prob_{name}_{t}_1'] = round(predictions_proba[i, 1], 2)
+                    df_pathaia = df_pathaia.reset_index()
+                    df_pathaia.to_csv(df_pathaia_folder, index=False)
+                fold += 1
+                for x in range(len(test_slides)):
+                    slide, label = test_slides[x], test_labels[x]
+                    results, prob_0, prob_1 = [], [], []
+                    for i in range(len(test_patches)):
+                        if test_patches[i]['slide_name'].split('_')[2] == slide:
+                            results.append(predictions[i])
+                            prob_0.append(predictions_proba[i, 0])
+                            prob_1.append(predictions_proba[i, 1])
+                    predict_0 = results.count(0)
+                    predict_1 = results.count(1)
+                    try:
                         avg_0 = sum(np.asarray(prob_0))/len(prob_0)
+                    except ZeroDivisionError:
+                        avg_0 = 0
+                    try:
                         avg_1 = sum(np.asarray(prob_1))/len(prob_1)
-                        df = df.append({'Slide': slide,
-                                        'Method': name,
-                                        'Task': t,
-                                        'Date': date,
-                                        'Level': level,
-                                        'True': label,
-                                        'Fold': fold,
-                                        'Predict_0': predict_0,
-                                        'Predict_1': predict_1,
-                                        'Avg_0': avg_0,
-                                        'Avg_1': avg_1}, ignore_index=True)
-                    df['Ratio'] = df['Predict_1']/(df['Predict_1']+df['Predict_0'])
-                    df.to_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}_{date}.csv'), index=False)
+                    except ZeroDivisionError:
+                        avg_1 = 0
+                    if avg_0 == 0 and avg_1 == 0:
+                        print(f'Slide error: {slide}')
+                        predict_0 = 1
+                        predict_1 = 1
+                    df = df.append({'Slide': slide,
+                                    'Method': name,
+                                    'Task': t,
+                                    'Date': date,
+                                    'Level': level,
+                                    'True': label,
+                                    'Fold': fold,
+                                    'Predict_0': predict_0,
+                                    'Predict_1': predict_1,
+                                    'Avg_0': avg_0,
+                                    'Avg_1': avg_1}, ignore_index=True)
+                
+                df['Ratio'] = df['Predict_1']/(df['Predict_1']+df['Predict_0'])
+                df.to_csv(os.path.join(outdir, f'Slide_pred_{t}_level{level}_{date}.csv'), index=False)
 
 
 if __name__ == "__main__":

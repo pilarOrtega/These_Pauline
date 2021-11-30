@@ -53,6 +53,10 @@ models = {
     'customLenet': {
         'model': Lenet,
         'module': xception
+    },
+    'MobileNetV2': {
+        'model': mobilenet_v2.MobileNetV2,
+        'module': mobilenet_v2
     }
 }
 

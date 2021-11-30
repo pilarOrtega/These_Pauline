@@ -1,22 +1,28 @@
-# goya config file for deep learning keras applications
-date: 2021-07-13
+date: 2021-11-15
+slide_dir: /data/Projet_Pauline/Annotations_lymphopath
+proj_dir: /data/Projet_Pauline/Patches
+output: /data/Projet_Pauline
 data:
   level: 1
   size: 224
   channels: 3
   tasks:
     - Task_4
+  data_csv: /home/arnaud/Scripts/Projet_Pauline/Data/main_df_Pauline.csv
 training:
+  models:
+    - customLenet
   batch: 16
   epochs: 20
   lr: 0.0001
-  loss: categorical_crossentropy
+  loss: binary_crossentropy
   workers: 16
-  pretrain: null
+  pretrain: imagenet
   balanced: True
   data_augmentation: True
+  optimizer: Adam
 experiment:
-  folds: 5
+  folds: 1
   split: 0.20
   seed: 42
 architecture:

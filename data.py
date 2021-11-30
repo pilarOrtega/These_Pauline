@@ -15,6 +15,7 @@ from numbers import Number
 from staintools.miscellaneous.get_concentrations import get_concentrations
 import albumentations as a
 from tqdm import tqdm
+from pathaia.patches import filters
 
 
 class Error(Exception):
@@ -133,6 +134,10 @@ def handle_patch_file(patch_file, level, column):
         for _, row in level_df.iterrows():
             yield row["x"], row["y"], row[column], row["dx"], row["dy"], row["id"]
 
+def has_tissue(img):
+    mask = filters.get_tissue(img, blacktol=0.1, whitetol=0.80, method="rgb")
+    return (mask.sum() > (0.9 * mask.shape[0] * mask.shape[1]))
+
 
 class PathaiaHandler(object):
 
@@ -159,12 +164,6 @@ class PathaiaHandler(object):
                 warnings.warn(str(e))
         return patch_list, labels
 
-
-    # def slide_query(patch):
-    # slide = openslide.OpenSlide(patch["slide_path"])
-    # pil_img = slide.read_region((patch["x"], patch["y"]),
-    #                             patch["level"], patch["dimensions"])
-    # return np.array(pil_img)[:, :, 0:3]
 
 def slide_query(patch, dim):
     """
@@ -227,13 +226,15 @@ class DataGenerator(keras.utils.Sequence):
         'Denotes the number of batches per epoch'
         return int(np.floor(len(self.indexes) / self.batch_size))
 
-    def __getitem__(self, index):
+    def __getitem__(self, index, preview=False):
         'Generate one batch of data'
         # Generate indexes of the batch
         indexes = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
         # Generate data
-        X, y = self.__data_generation(indexes)
-
+        if preview:
+            X, y, origin = self.__data_generation(indexes, preview)
+            return X, y, origin
+        X, y = self.__data_generation(indexes, preview)
         return X, y
 
     def on_epoch_end(self):
@@ -283,11 +284,12 @@ class DataGenerator(keras.utils.Sequence):
             idxs.append(patch)
         return idxs
 
-    def __data_generation(self, list_IDs_temp):
+    def __data_generation(self, list_IDs_temp, preview=False):
         'Generates data containing batch_size samples'  # X : (n_samples, *dim, n_channels)
         # Initialization
         X = np.empty((self.batch_size, *self.dim, self.n_channels))
         y = np.empty((self.batch_size), dtype=int)
+        origin = []
 
         # Generate data
         for i, ID in enumerate(list_IDs_temp):
@@ -295,10 +297,22 @@ class DataGenerator(keras.utils.Sequence):
             patch = self.list_IDs[ID]
             if self.data_augmentation:
                 patch = random_modif(patch)
-            X[i, ] = slide_query(patch, self.dim)
+            img = slide_query(patch, self.dim)
+            if self.data_augmentation:
+                transform = a.Compose([a.HorizontalFlip(p=0.5), a.VerticalFlip(p=0.5)])
+                transformed = transform(image=img)
+                img = transformed['image']
+                sa = StainAugmentor()
+                img = sa.apply(img, **sa.get_params())
+                img = (img * 255).astype(np.uint8)
 
             # Store class
+            X[i, ] = img
             y[i] = self.labels[ID]
+            origin.append(os.path.basename(os.path.dirname(patch['slide'])))
+        
+        if preview:
+            return X, y, origin
 
         return self.preproc(X), keras.utils.to_categorical(y, num_classes=self.n_classes)
 
